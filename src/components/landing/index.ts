@@ -1,0 +1,10 @@
+export { Header } from "./Header";
+export { Hero } from "./Hero";
+export { Solutions } from "./Solutions";
+export { BusyERP } from "./BusyERP";
+export { Developers } from "./Developers";
+export { Security } from "./Security";
+export { ROI } from "./ROI";
+export { FinalCTA } from "./FinalCTA";
+export { Footer } from "./Footer";
+export { ContactCard, contactInfo } from "./ContactCard";
