@@ -11,11 +11,17 @@ import {
   Copy,
   Tag,
   User,
-  CheckCircle2
+  CheckCircle2,
+  BookOpen,
+  ChevronRight,
+  Sparkles,
+  Code2,
+  Zap,
+  Layers
 } from "lucide-react";
 import { getPostBySlug, getRelatedPosts, getAllPosts } from "@/lib/blog";
 import { BlogCard } from "@/components/blog/BlogCard";
-import { siteConfig, generateBreadcrumbSchema, generateFAQSchema } from "@/lib/seo";
+import { siteConfig, generateBreadcrumbSchema, generateFAQSchema } from "@/lib/seo/config";
 
 // Generate static params for all blog posts
 export async function generateStaticParams() {
@@ -35,9 +41,7 @@ export async function generateMetadata({
   const post = getPostBySlug(slug);
   
   if (!post) {
-    return {
-      title: "Post Not Found",
-    };
+    return { title: "Post Not Found" };
   }
 
   return {
@@ -56,22 +60,12 @@ export async function generateMetadata({
       publishedTime: post.publishedAt,
       modifiedTime: post.updatedAt,
       authors: [post.author.name],
-      images: post.seo.ogImage ? [
-        {
-          url: post.seo.ogImage,
-          width: 1200,
-          height: 630,
-          alt: post.title,
-        },
-      ] : undefined,
     },
     twitter: {
       card: "summary_large_image",
       title: post.seo.title,
       description: post.seo.description,
-      images: post.seo.ogImage ? [post.seo.ogImage] : undefined,
     },
-    robots: post.seo.noIndex ? { index: false, follow: false } : undefined,
   };
 }
 
@@ -95,10 +89,6 @@ function generateBlogPostSchema(post: ReturnType<typeof getPostBySlug>) {
       "@type": "Organization",
       name: siteConfig.name,
       url: siteConfig.url,
-      logo: {
-        "@type": "ImageObject",
-        url: `${siteConfig.url}/logo.svg`,
-      },
     },
     mainEntityOfPage: {
       "@type": "WebPage",
@@ -107,26 +97,6 @@ function generateBlogPostSchema(post: ReturnType<typeof getPostBySlug>) {
     articleSection: post.category,
     keywords: post.tags.join(", "),
     wordCount: post.content.split(/\s+/).length,
-    timeRequired: `PT${post.readingTime}M`,
-  };
-}
-
-function generateAISummarySchema(post: ReturnType<typeof getPostBySlug>) {
-  if (!post || !post.aiOptimized) return null;
-
-  return {
-    "@context": "https://schema.org",
-    "@type": "WebPage",
-    name: post.title,
-    description: post.aiOptimized.summary,
-    mainEntity: {
-      "@type": "ItemList",
-      itemListElement: post.aiOptimized.keyTakeaways.map((takeaway, index) => ({
-        "@type": "ListItem",
-        position: index + 1,
-        name: takeaway,
-      })),
-    },
   };
 }
 
@@ -149,7 +119,6 @@ export default async function BlogPostPage({
     year: "numeric",
   });
 
-  // Generate schemas
   const schemas = [
     generateBreadcrumbSchema([
       { name: "Home", url: "/" },
@@ -157,7 +126,6 @@ export default async function BlogPostPage({
       { name: post.title, url: `/blog/${post.slug}` },
     ]),
     generateBlogPostSchema(post),
-    generateAISummarySchema(post),
     post.aiOptimized.faq ? generateFAQSchema(post.aiOptimized.faq) : null,
   ].filter(Boolean);
 
@@ -175,170 +143,260 @@ export default async function BlogPostPage({
       <div className="min-h-screen flex flex-col bg-background">
         <main className="flex-1">
           
-          {/* Article Header */}
-          <section className="relative overflow-hidden py-10 sm:py-12 md:py-16 bg-gradient-to-b from-surface/80 to-background">
-            <div className="absolute inset-0 gradient-brand-subtle pointer-events-none" />
-            <div className="relative px-4 sm:px-6 lg:px-8 max-w-[900px] mx-auto">
-              
-              {/* Breadcrumb */}
-              <nav className="flex items-center gap-2 text-xs sm:text-sm text-text-muted mb-6">
-                <Link href="/" className="hover:text-brand-primary transition-colors">
-                  Home
-                </Link>
-                <span>/</span>
-                <Link href="/blog" className="hover:text-brand-primary transition-colors">
-                  Blog
-                </Link>
-                <span>/</span>
-                <span className="text-text-secondary truncate max-w-[200px]">{post.title}</span>
-              </nav>
+          {/* Modern Hero Section */}
+          <section className="relative overflow-hidden">
+            {/* Animated Background */}
+            <div className="absolute inset-0 bg-gradient-to-br from-brand-primary/5 via-transparent to-brand-accent/5" />
+            
+            {/* Grid Pattern */}
+            <div 
+              className="absolute inset-0 opacity-[0.02]" 
+              style={{
+                backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23000000' fill-opacity='1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`
+              }}
+            />
+            
+            {/* Floating Elements */}
+            <div className="absolute top-10 right-10 w-64 h-64 bg-brand-primary/10 rounded-full blur-3xl animate-pulse" />
+            <div className="absolute bottom-10 left-10 w-48 h-48 bg-brand-accent/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
 
-              {/* Category & Reading Time */}
-              <div className="flex flex-wrap items-center gap-3 mb-4">
-                <span className="inline-flex items-center rounded-full bg-brand-primary/10 px-3 py-1 text-xs font-medium text-brand-primary">
-                  {post.category}
-                </span>
-                <span className="flex items-center gap-1.5 text-xs text-text-muted">
-                  <Clock className="h-3.5 w-3.5" />
-                  {post.readingTime} min read
-                </span>
-              </div>
+            <div className="relative px-4 sm:px-6 lg:px-8 max-w-[1200px] mx-auto py-10 sm:py-12 lg:py-16">
+              <div className="grid lg:grid-cols-[1fr_280px] gap-8 lg:gap-12">
+                
+                {/* Main Content */}
+                <div>
+                  {/* Breadcrumb */}
+                  <nav className="flex items-center gap-2 text-xs sm:text-sm text-text-muted mb-6 animate-fadeIn">
+                    <Link href="/" className="hover:text-brand-primary transition-colors">
+                      Home
+                    </Link>
+                    <ChevronRight className="h-3.5 w-3.5" />
+                    <Link href="/blog" className="hover:text-brand-primary transition-colors">
+                      Blog
+                    </Link>
+                    <ChevronRight className="h-3.5 w-3.5" />
+                    <span className="text-text-secondary truncate max-w-[200px]">{post.title}</span>
+                  </nav>
 
-              {/* Title */}
-              <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight text-text-primary mb-4 leading-tight">
-                {post.title}
-              </h1>
-
-              {/* Excerpt */}
-              <p className="text-base sm:text-lg text-text-secondary mb-6 leading-relaxed">
-                {post.excerpt}
-              </p>
-
-              {/* Author & Date */}
-              <div className="flex flex-wrap items-center gap-4 sm:gap-6 pb-6 border-b border-border/60">
-                <div className="flex items-center gap-3">
-                  <div className="h-10 w-10 rounded-full bg-brand-primary/10 flex items-center justify-center">
-                    <User className="h-5 w-5 text-brand-primary" />
+                  {/* Category & Meta Row */}
+                  <div className="flex flex-wrap items-center gap-3 mb-4 animate-fadeIn" style={{ animationDelay: '100ms' }}>
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-brand-primary/10 px-3 py-1 text-xs font-medium text-brand-primary border border-brand-primary/20">
+                      <Layers className="h-3 w-3" />
+                      {post.category}
+                    </span>
+                    <span className="flex items-center gap-1.5 text-xs text-text-muted">
+                      <Clock className="h-3.5 w-3.5" />
+                      {post.readingTime} min read
+                    </span>
                   </div>
-                  <div>
-                    <p className="text-sm font-semibold text-text-primary">{post.author.name}</p>
-                    <p className="text-xs text-text-muted">{post.author.role}</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-1.5 text-sm text-text-muted">
-                  <Calendar className="h-4 w-4" />
-                  {formattedDate}
-                </div>
-              </div>
 
-              {/* AI Summary (SEO 2.0) - Visible for AI crawlers */}
-              <div className="hidden" aria-hidden="true">
-                <div data-ai-summary={post.aiOptimized.summary} />
-                <div data-key-takeaways={JSON.stringify(post.aiOptimized.keyTakeaways)} />
-                <div data-entities={JSON.stringify(post.aiOptimized.entities)} />
+                  {/* Title */}
+                  <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-text-primary mb-5 leading-tight animate-fadeIn" style={{ animationDelay: '200ms' }}>
+                    {post.title}
+                  </h1>
+
+                  {/* Excerpt */}
+                  <p className="text-lg sm:text-xl text-text-secondary mb-6 leading-relaxed animate-fadeIn" style={{ animationDelay: '300ms' }}>
+                    {post.excerpt}
+                  </p>
+
+                  {/* Author & Date Card */}
+                  <div className="flex flex-wrap items-center gap-4 sm:gap-6 p-4 rounded-xl bg-white border border-border/60 mb-8 animate-fadeIn" style={{ animationDelay: '400ms' }}>
+                    <div className="flex items-center gap-3">
+                      <div className="h-11 w-11 rounded-full bg-gradient-to-br from-brand-primary to-brand-accent flex items-center justify-center">
+                        <User className="h-5 w-5 text-white" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-semibold text-text-primary">{post.author.name}</p>
+                        <p className="text-xs text-text-muted">{post.author.role}</p>
+                      </div>
+                    </div>
+                    <div className="h-8 w-px bg-border/60 hidden sm:block" />
+                    <div className="flex items-center gap-1.5 text-sm text-text-muted">
+                      <Calendar className="h-4 w-4" />
+                      {formattedDate}
+                    </div>
+                  </div>
+
+                  {/* Key Takeaways - Animated Card */}
+                  {post.aiOptimized.keyTakeaways && (
+                    <div className="relative mb-8 rounded-xl border border-brand-primary/20 bg-gradient-to-br from-brand-primary/5 to-transparent p-5 animate-fadeIn" style={{ animationDelay: '500ms' }}>
+                      <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-brand-primary to-brand-accent rounded-t-xl" />
+                      <h3 className="text-base font-semibold text-text-primary mb-4 flex items-center gap-2">
+                        <Zap className="h-5 w-5 text-brand-primary" />
+                        Key Takeaways
+                      </h3>
+                      <ul className="space-y-2">
+                        {post.aiOptimized.keyTakeaways.map((takeaway, index) => (
+                          <li key={index} className="flex items-start gap-3 text-sm text-text-secondary">
+                            <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-brand-primary/20 text-brand-primary text-xs font-medium mt-0.5">
+                              {index + 1}
+                            </span>
+                            <span>{takeaway}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+
+                {/* Sidebar - Desktop */}
+                <aside className="hidden lg:block">
+                  <div className="sticky top-24 space-y-6">
+                    {/* Table of Contents Placeholder */}
+                    <div className="rounded-xl border border-border/60 bg-white p-5">
+                      <h4 className="text-sm font-semibold text-text-primary mb-4 flex items-center gap-2">
+                        <BookOpen className="h-4 w-4 text-brand-primary" />
+                        In This Article
+                      </h4>
+                      <nav className="space-y-2 text-sm">
+                        <a href="#" className="block text-text-secondary hover:text-brand-primary transition-colors pl-3 border-l-2 border-brand-primary">
+                          Introduction
+                        </a>
+                        <a href="#" className="block text-text-muted hover:text-brand-primary transition-colors pl-3 border-l-2 border-transparent hover:border-brand-primary/30">
+                          Key Features
+                        </a>
+                        <a href="#" className="block text-text-muted hover:text-brand-primary transition-colors pl-3 border-l-2 border-transparent hover:border-brand-primary/30">
+                          Implementation Guide
+                        </a>
+                        <a href="#" className="block text-text-muted hover:text-brand-primary transition-colors pl-3 border-l-2 border-transparent hover:border-brand-primary/30">
+                          Best Practices
+                        </a>
+                      </nav>
+                    </div>
+
+                    {/* Share Card */}
+                    <div className="rounded-xl border border-border/60 bg-white p-5">
+                      <h4 className="text-sm font-semibold text-text-primary mb-4 flex items-center gap-2">
+                        <Share2 className="h-4 w-4 text-brand-primary" />
+                        Share Article
+                      </h4>
+                      <div className="flex gap-2">
+                        <button className="flex-1 h-10 rounded-lg bg-[#1DA1F2]/10 text-[#1DA1F2] flex items-center justify-center hover:bg-[#1DA1F2]/20 transition-colors">
+                          <Twitter className="h-4 w-4" />
+                        </button>
+                        <button className="flex-1 h-10 rounded-lg bg-[#0A66C2]/10 text-[#0A66C2] flex items-center justify-center hover:bg-[#0A66C2]/20 transition-colors">
+                          <Linkedin className="h-4 w-4" />
+                        </button>
+                        <button className="flex-1 h-10 rounded-lg bg-brand-primary/10 text-brand-primary flex items-center justify-center hover:bg-brand-primary/20 transition-colors">
+                          <Copy className="h-4 w-4" />
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Tags Card */}
+                    <div className="rounded-xl border border-border/60 bg-white p-5">
+                      <h4 className="text-sm font-semibold text-text-primary mb-3 flex items-center gap-2">
+                        <Tag className="h-4 w-4 text-brand-primary" />
+                        Tags
+                      </h4>
+                      <div className="flex flex-wrap gap-1.5">
+                        {post.tags.map((tag) => (
+                          <span
+                            key={tag}
+                            className="inline-flex items-center px-2.5 py-1 rounded-full bg-surface text-xs text-text-secondary hover:text-brand-primary cursor-pointer transition-colors"
+                          >
+                            {tag}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </aside>
               </div>
             </div>
           </section>
 
           {/* Article Content */}
           <section className="py-8 sm:py-10">
-            <div className="px-4 sm:px-6 lg:px-8 max-w-[900px] mx-auto">
-              
-              {/* Article Body */}
-              <article 
-                className="prose prose-slate prose-sm sm:prose-base max-w-none
-                  prose-headings:text-text-primary prose-headings:font-bold
-                  prose-h1:text-2xl prose-h1:mb-4 prose-h1:mt-8
-                  prose-h2:text-xl prose-h2:mb-3 prose-h2:mt-6
-                  prose-h3:text-lg prose-h3:mb-2 prose-h3:mt-4
-                  prose-p:text-text-secondary prose-p:leading-relaxed
-                  prose-a:text-brand-primary prose-a:no-underline hover:prose-a:underline
-                  prose-strong:text-text-primary
-                  prose-code:text-brand-primary prose-code:bg-surface prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded
-                  prose-pre:bg-slate-900 prose-pre:text-slate-100
-                  prose-blockquote:border-brand-primary prose-blockquote:bg-surface prose-blockquote:py-4 prose-blockquote:px-6 prose-blockquote:rounded-xl prose-blockquote:not-italic
-                  prose-li:text-text-secondary
-                  prose-table:border-collapse
-                  prose-th:bg-surface prose-th:text-text-primary prose-th:font-semibold
-                  prose-td:border prose-td:border-border/60
-                  prose-img:rounded-xl prose-img:shadow-lg
-                "
-              >
-                <div dangerouslySetInnerHTML={{ __html: formatContent(post.content) }} />
-              </article>
+            <div className="px-4 sm:px-6 lg:px-8 max-w-[1200px] mx-auto">
+              <div className="grid lg:grid-cols-[1fr_280px] gap-8 lg:gap-12">
+                
+                {/* Main Article */}
+                <div>
+                  {/* Article Body */}
+                  <article 
+                    className="prose prose-slate prose-sm sm:prose-base max-w-none
+                      prose-headings:text-text-primary prose-headings:font-bold prose-headings:scroll-mt-24
+                      prose-h1:text-2xl prose-h1:mb-4 prose-h1:mt-8 prose-h1:pb-3 prose-h1:border-b prose-h1:border-border/40
+                      prose-h2:text-xl prose-h2:mb-3 prose-h2:mt-8 prose-h2:pb-2 prose-h2:border-b prose-h2:border-border/20
+                      prose-h3:text-lg prose-h3:mb-2 prose-h3:mt-6
+                      prose-p:text-text-secondary prose-p:leading-relaxed prose-p:mb-4
+                      prose-a:text-brand-primary prose-a:no-underline hover:prose-a:underline
+                      prose-strong:text-text-primary prose-strong:font-semibold
+                      prose-code:text-brand-primary prose-code:bg-surface prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:text-sm prose-code:before:content-none prose-code:after:content-none
+                      prose-pre:bg-slate-900 prose-pre:text-slate-100 prose-pre:rounded-xl prose-pre:shadow-lg prose-pre:overflow-x-auto
+                      prose-blockquote:border-brand-primary prose-blockquote:bg-surface prose-blockquote:py-4 prose-blockquote:px-6 prose-blockquote:rounded-xl prose-blockquote:not-italic prose-blockquote:border-l-4
+                      prose-li:text-text-secondary prose-li:my-1
+                      prose-table:border-collapse prose-table:w-full
+                      prose-th:bg-surface prose-th:text-text-primary prose-th:font-semibold prose-th:px-4 prose-th:py-2 prose-th:border prose-th:border-border/40 prose-th:text-left
+                      prose-td:px-4 prose-td:py-2 prose-td:border prose-td:border-border/40
+                      prose-img:rounded-xl prose-img:shadow-lg prose-img:mx-auto
+                    "
+                  >
+                    <div dangerouslySetInnerHTML={{ __html: formatContent(post.content) }} />
+                  </article>
 
-              {/* Tags */}
-              <div className="mt-10 pt-6 border-t border-border/60">
-                <div className="flex flex-wrap items-center gap-2">
-                  <Tag className="h-4 w-4 text-text-muted" />
-                  {post.tags.map((tag) => (
-                    <span
-                      key={tag}
-                      className="inline-flex items-center px-3 py-1 rounded-full bg-surface border border-border/50 text-xs text-text-secondary"
-                    >
-                      {tag}
-                    </span>
-                  ))}
-                </div>
-              </div>
-
-              {/* Share Section */}
-              <div className="mt-8 p-5 rounded-xl border border-border/60 bg-surface/50">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                  <div>
-                    <h3 className="text-sm font-semibold text-text-primary mb-1">Share this article</h3>
-                    <p className="text-xs text-text-muted">Help others discover this content</p>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <button className="h-9 w-9 rounded-lg bg-[#1DA1F2]/10 text-[#1DA1F2] flex items-center justify-center hover:bg-[#1DA1F2]/20 transition-colors">
-                      <Twitter className="h-4 w-4" />
-                    </button>
-                    <button className="h-9 w-9 rounded-lg bg-[#0A66C2]/10 text-[#0A66C2] flex items-center justify-center hover:bg-[#0A66C2]/20 transition-colors">
-                      <Linkedin className="h-4 w-4" />
-                    </button>
-                    <button className="h-9 w-9 rounded-lg bg-brand-primary/10 text-brand-primary flex items-center justify-center hover:bg-brand-primary/20 transition-colors">
-                      <Copy className="h-4 w-4" />
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-              {/* Key Takeaways */}
-              {post.aiOptimized.keyTakeaways && (
-                <div className="mt-8 p-5 rounded-xl border border-brand-primary/20 bg-brand-primary/5">
-                  <h3 className="text-base font-semibold text-text-primary mb-4 flex items-center gap-2">
-                    <CheckCircle2 className="h-5 w-5 text-brand-primary" />
-                    Key Takeaways
-                  </h3>
-                  <ul className="space-y-2">
-                    {post.aiOptimized.keyTakeaways.map((takeaway, index) => (
-                      <li key={index} className="flex items-start gap-2.5 text-sm text-text-secondary">
-                        <span className="h-5 w-5 rounded-full bg-brand-primary/20 text-brand-primary text-xs flex items-center justify-center shrink-0 mt-0.5">
-                          {index + 1}
+                  {/* Mobile Share & Tags */}
+                  <div className="lg:hidden mt-8 space-y-4">
+                    {/* Tags */}
+                    <div className="flex flex-wrap items-center gap-2">
+                      <Tag className="h-4 w-4 text-text-muted" />
+                      {post.tags.map((tag) => (
+                        <span
+                          key={tag}
+                          className="inline-flex items-center px-3 py-1 rounded-full bg-surface border border-border/50 text-xs text-text-secondary"
+                        >
+                          {tag}
                         </span>
-                        {takeaway}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
+                      ))}
+                    </div>
 
-              {/* FAQ Section */}
-              {post.aiOptimized.faq && post.aiOptimized.faq.length > 0 && (
-                <div className="mt-10">
-                  <h3 className="text-lg font-semibold text-text-primary mb-4">
-                    Frequently Asked Questions
-                  </h3>
-                  <div className="space-y-3">
-                    {post.aiOptimized.faq.map((item, index) => (
-                      <div key={index} className="rounded-xl border border-border/60 bg-white p-4">
-                        <p className="text-sm font-semibold text-text-primary mb-2">{item.question}</p>
-                        <p className="text-sm text-text-secondary">{item.answer}</p>
-                      </div>
-                    ))}
+                    {/* Share */}
+                    <div className="flex items-center gap-3">
+                      <span className="text-sm text-text-muted">Share:</span>
+                      <button className="h-9 w-9 rounded-lg bg-[#1DA1F2]/10 text-[#1DA1F2] flex items-center justify-center hover:bg-[#1DA1F2]/20 transition-colors">
+                        <Twitter className="h-4 w-4" />
+                      </button>
+                      <button className="h-9 w-9 rounded-lg bg-[#0A66C2]/10 text-[#0A66C2] flex items-center justify-center hover:bg-[#0A66C2]/20 transition-colors">
+                        <Linkedin className="h-4 w-4" />
+                      </button>
+                      <button className="h-9 w-9 rounded-lg bg-brand-primary/10 text-brand-primary flex items-center justify-center hover:bg-brand-primary/20 transition-colors">
+                        <Copy className="h-4 w-4" />
+                      </button>
+                    </div>
                   </div>
+
+                  {/* FAQ Section */}
+                  {post.aiOptimized.faq && post.aiOptimized.faq.length > 0 && (
+                    <div className="mt-12">
+                      <h2 className="text-xl font-bold text-text-primary mb-6 flex items-center gap-2">
+                        <Sparkles className="h-5 w-5 text-brand-primary" />
+                        Frequently Asked Questions
+                      </h2>
+                      <div className="space-y-3">
+                        {post.aiOptimized.faq.map((item, index) => (
+                          <details 
+                            key={index} 
+                            className="group rounded-xl border border-border/60 bg-white overflow-hidden open:border-brand-primary/30"
+                          >
+                            <summary className="flex items-center justify-between p-4 cursor-pointer list-none">
+                              <span className="text-sm font-semibold text-text-primary pr-4">{item.question}</span>
+                              <ChevronRight className="h-4 w-4 text-text-muted shrink-0 transition-transform group-open:rotate-90" />
+                            </summary>
+                            <div className="px-4 pb-4">
+                              <p className="text-sm text-text-secondary leading-relaxed">{item.answer}</p>
+                            </div>
+                          </details>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
-              )}
+
+                {/* Sidebar spacer for desktop */}
+                <div className="hidden lg:block" />
+              </div>
             </div>
           </section>
 
@@ -346,10 +404,19 @@ export default async function BlogPostPage({
           {relatedPosts.length > 0 && (
             <section className="py-10 sm:py-12 bg-surface/50">
               <div className="px-4 sm:px-6 lg:px-8 max-w-[1200px] mx-auto">
-                <h2 className="text-xl sm:text-2xl font-bold text-text-primary mb-6 flex items-center gap-2">
-                  <span className="h-1.5 w-1.5 rounded-full bg-brand-primary" />
-                  Related Articles
-                </h2>
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-xl sm:text-2xl font-bold text-text-primary flex items-center gap-2">
+                    <span className="h-2 w-2 rounded-full bg-brand-primary" />
+                    Related Articles
+                  </h2>
+                  <Link
+                    href="/blog"
+                    className="text-sm font-medium text-brand-primary hover:underline flex items-center gap-1"
+                  >
+                    View all
+                    <ArrowLeft className="h-4 w-4 rotate-180" />
+                  </Link>
+                </div>
                 <div className="grid gap-5 sm:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
                   {relatedPosts.map((relatedPost) => (
                     <BlogCard key={relatedPost.id} post={relatedPost} />
@@ -359,77 +426,84 @@ export default async function BlogPostPage({
             </section>
           )}
 
-          {/* CTA */}
+          {/* Final CTA */}
           <section className="py-10 sm:py-12">
-            <div className="px-4 sm:px-6 lg:px-8 max-w-[900px] mx-auto">
-              <div className="rounded-2xl bg-gradient-to-br from-brand-primary via-brand-primary to-brand-accent p-6 sm:p-8 text-center">
-                <h3 className="text-xl sm:text-2xl font-bold text-white mb-3">
-                  Ready to transform your business communication?
-                </h3>
-                <p className="text-sm sm:text-base text-white/90 mb-5 max-w-lg mx-auto">
-                  Join hundreds of enterprises using Whats91 for WhatsApp Cloud API integration.
-                </p>
-                <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                  <Link
-                    href="/solutions/busy-erp"
-                    className="h-11 px-6 rounded-xl bg-white text-brand-primary font-semibold text-sm hover:bg-white/95 transition-colors inline-flex items-center justify-center"
-                  >
-                    Explore Solutions
-                  </Link>
-                  <Link
-                    href="/blog"
-                    className="h-11 px-6 rounded-xl bg-white/10 backdrop-blur-sm border border-white/20 text-white font-semibold text-sm hover:bg-white/20 transition-colors inline-flex items-center justify-center"
-                  >
-                    <ArrowLeft className="h-4 w-4 mr-2" />
-                    Back to Blog
-                  </Link>
+            <div className="px-4 sm:px-6 lg:px-8 max-w-[1200px] mx-auto">
+              <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-brand-primary via-brand-primary to-brand-accent p-8 sm:p-10 text-center">
+                <div className="absolute inset-0 overflow-hidden">
+                  <div className="absolute -top-24 -right-24 w-48 sm:w-72 h-48 sm:h-72 bg-white/10 rounded-full blur-3xl" />
+                  <div className="absolute -bottom-24 -left-24 w-48 sm:w-72 h-48 sm:h-72 bg-white/10 rounded-full blur-3xl" />
+                </div>
+                <div className="relative z-10 max-w-xl mx-auto">
+                  <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/15 text-xs text-white mb-4">
+                    <Code2 className="h-3 w-3" />
+                    Ready to build?
+                  </div>
+                  <h3 className="text-2xl sm:text-3xl font-bold text-white mb-3">
+                    Transform your enterprise communication
+                  </h3>
+                  <p className="text-sm sm:text-base text-white/80 mb-6">
+                    Join hundreds of enterprises using Whats91 for WhatsApp Cloud API integration.
+                  </p>
+                  <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                    <Link
+                      href="/solutions/busy-erp"
+                      className="h-12 px-6 rounded-xl bg-white text-brand-primary font-semibold text-sm hover:bg-white/95 transition-colors inline-flex items-center justify-center gap-2"
+                    >
+                      <Zap className="h-4 w-4" />
+                      Explore Solutions
+                    </Link>
+                    <Link
+                      href="/blog"
+                      className="h-12 px-6 rounded-xl bg-white/10 backdrop-blur-sm border border-white/20 text-white font-semibold text-sm hover:bg-white/20 transition-colors inline-flex items-center justify-center gap-2"
+                    >
+                      <ArrowLeft className="h-4 w-4" />
+                      Back to Blog
+                    </Link>
+                  </div>
                 </div>
               </div>
             </div>
           </section>
         </main>
       </div>
+
+      <style jsx global>{`
+        @keyframes fadeIn {
+          from {
+            opacity: 0;
+            transform: translateY(16px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        .animate-fadeIn {
+          animation: fadeIn 0.6s ease-out forwards;
+          opacity: 0;
+        }
+      `}</style>
     </>
   );
 }
 
-// Simple markdown-like content formatter
+// Content formatter
 function formatContent(content: string): string {
   return content
-    // Headers
     .replace(/^### (.*$)/gim, '<h3>$1</h3>')
     .replace(/^## (.*$)/gim, '<h2>$1</h2>')
     .replace(/^# (.*$)/gim, '<h1>$1</h1>')
-    // Bold
     .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-    // Italic
     .replace(/\*(.*?)\*/g, '<em>$1</em>')
-    // Code blocks
     .replace(/```([\s\S]*?)```/g, '<pre><code>$1</code></pre>')
-    // Inline code
     .replace(/`(.*?)`/g, '<code>$1</code>')
-    // Links
     .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2">$1</a>')
-    // Lists
     .replace(/^- (.*$)/gim, '<li>$1</li>')
-    // Paragraphs
     .replace(/\n\n/g, '</p><p>')
-    // Line breaks
     .replace(/\n/g, '<br>')
-    // Tables (basic)
-    .replace(/\|(.+)\|/g, (match) => {
-      const cells = match.split('|').filter(c => c.trim());
-      if (cells.some(c => c.match(/^[\s-]+$/))) {
-        return ''; // Skip separator rows
-      }
-      return `<tr>${cells.map(c => `<td>${c.trim()}</td>`).join('')}</tr>`;
-    })
-    // Wrap in paragraph
     .replace(/^/, '<p>')
     .replace(/$/, '</p>')
-    // Clean up empty paragraphs
     .replace(/<p><\/p>/g, '')
-    .replace(/<p><br><\/p>/g, '')
-    // Wrap tables
-    .replace(/(<tr>.*<\/tr>)+/g, '<table class="w-full border-collapse">$&</table>');
+    .replace(/<p><br><\/p>/g, '');
 }
