@@ -3,6 +3,7 @@
 import { Header } from "@/components/landing/Header";
 import { Footer } from "@/components/landing/Footer";
 import { ContactCard } from "@/components/landing/ContactCard";
+import { AnimatedChatbot } from "@/components/landing/AnimatedChatbot";
 import { Button } from "@/components/ui/button";
 import { 
   Calendar, 
@@ -142,66 +143,8 @@ export default function BusyERPIntegrationPage() {
                 </div>
               </div>
 
-              {/* Right - Chat Preview */}
-              <div className="relative">
-                <div className="rounded-2xl bg-surface/60 border border-border/50 p-3 sm:p-4 shadow-lg backdrop-blur-sm max-w-[340px] mx-auto">
-                  {/* Chat Header */}
-                  <div className="flex items-center gap-2.5 px-3 py-2.5 border-b border-border/60 bg-gradient-to-r from-brand-primary/[0.07] to-transparent rounded-t-xl -mt-1 -mx-1 mb-3">
-                    <div className="flex h-9 w-9 items-center justify-center rounded-full bg-brand-primary shadow-md shadow-brand-primary/20 shrink-0">
-                      <span className="text-xs font-semibold text-white">W91</span>
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-sm font-semibold text-text-primary truncate">Your Business Name</p>
-                      <p className="text-[10px] text-brand-primary font-medium">✓ Verified Business</p>
-                    </div>
-                  </div>
-                  
-                  {/* Welcome Message */}
-                  <div className="flex justify-start mb-3">
-                    <div className="rounded-2xl rounded-bl-sm bg-white border border-border/60 px-3.5 py-3 text-sm text-text-primary max-w-[260px] shadow-sm">
-                      <p className="mb-3">👋 Welcome! How can I help you today?</p>
-                      {/* Buttons Grid */}
-                      <div className="grid grid-cols-2 gap-2">
-                        {["Balance", "Ledger", "Receipt", "Bilty"].map((btn, i) => (
-                          <button 
-                            key={i}
-                            className="text-xs font-medium text-brand-primary bg-brand-primary/5 hover:bg-brand-primary/10 border border-brand-primary/20 rounded-lg py-2 px-3 transition-colors"
-                          >
-                            {btn}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Balance Response */}
-                  <div className="flex justify-end mb-3">
-                    <div className="rounded-2xl rounded-br-sm bg-brand-primary px-4 py-2 text-sm text-white max-w-[180px] shadow-md shadow-brand-primary/15">
-                      Balance
-                    </div>
-                  </div>
-                  <div className="flex justify-start">
-                    <div className="rounded-2xl rounded-bl-sm bg-white border border-border/60 px-3.5 py-3 text-xs sm:text-sm text-text-primary max-w-[260px] shadow-sm">
-                      <p className="font-semibold mb-1">Your Account Summary</p>
-                      <p className="text-text-secondary">Outstanding: <span className="font-medium text-text-primary">₹1,25,000</span></p>
-                      <p className="text-text-secondary">Last Payment: <span className="font-medium text-text-primary">₹50,000</span></p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Floating Badge */}
-                <div className="absolute -bottom-3 -right-3 sm:right-0 hidden sm:flex rounded-xl bg-white border border-border/60 px-3 py-2 shadow-lg">
-                  <div className="flex items-center gap-2">
-                    <div className="h-7 w-7 rounded-full bg-brand-primary/10 flex items-center justify-center">
-                      <Bot className="h-3.5 w-3.5 text-brand-primary" />
-                    </div>
-                    <div>
-                      <p className="text-xs font-semibold text-text-primary">24/7 Chatbot</p>
-                      <p className="text-[10px] text-text-muted">Zero wait time</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
+              {/* Right - Animated Chatbot Demo */}
+              <AnimatedChatbot />
             </div>
           </div>
         </section>
