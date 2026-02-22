@@ -5,34 +5,31 @@ import { Footer } from "@/components/landing/Footer";
 import { ContactCard } from "@/components/landing/ContactCard";
 import { Button } from "@/components/ui/button";
 import { 
-  Bell,
   ChevronRight,
-  Settings,
-  Zap,
-  Shield,
-  Clock,
+  Bell,
+  Filter,
   Users,
+  CreditCard,
+  Timer,
   Building2,
   Factory,
   Truck as TruckIcon,
   Store,
   CheckCircle2,
   ArrowRight,
-  Layers,
-  Filter,
-  Calendar,
-  ToggleLeft,
-  ToggleRight,
+  Clock,
+  Zap,
+  Shield,
+  Lock,
+  FileCheck,
   FileText,
-  TrendingUp,
+  Calendar,
   Target,
+  TrendingUp,
   ChevronDown,
   ChevronUp,
-  Play,
-  CreditCard,
-  Banknote,
-  Timer,
-  AlertCircle
+  Settings,
+  Layers
 } from "lucide-react";
 import { useState } from "react";
 
@@ -45,25 +42,23 @@ const logicFilters = [
 
 const executionModes = [
   {
-    mode: "Normal",
+    title: "Normal Mode",
+    subtitle: "Scheduled, Structured Outreach",
     icon: Calendar,
-    title: "Normal Mode: Scheduled, Structured Outreach",
-    description: "Run your collection strategies in the background without manual effort.",
     features: [
-      { title: "Granular Scheduling", desc: "Set daily, weekly, or monthly cadences." },
-      { title: "Smart Inclusion/Exclusion", desc: "Filter by outstanding amounts or exclude VIP clients." },
-      { title: "Multi-Tier Routing", desc: "Distinct templates for different customer categories." },
+      "Granular Scheduling: Set daily, weekly, or monthly cadences",
+      "Smart Inclusion/Exclusion: Filter by outstanding amounts or exclude VIP clients",
+      "Multi-Tier Routing: Distinct templates for different customer categories",
     ]
   },
   {
-    mode: "Advanced",
+    title: "Advanced Mode",
+    subtitle: "Customer-Specific Intelligence",
     icon: Zap,
-    title: "Advanced Mode: Customer-Specific Intelligence",
-    description: "Each customer is evaluated against their specific financial terms.",
     features: [
-      { title: "Credit Limit Validation", desc: "No reminders until outstanding crosses credit limit." },
-      { title: "Invoice Aging Logic", desc: "Reminders trigger only after credit period ends." },
-      { title: "Smart Condition Engine", desc: "Multiple rules evaluated per customer." },
+      "Credit Limit Validation: No reminders until outstanding crosses credit limit",
+      "Invoice Aging Logic: Reminders trigger only after credit period ends",
+      "Smart Condition Engine: Multiple rules evaluated per customer",
     ]
   }
 ];
@@ -76,6 +71,13 @@ const validationSteps = [
   { step: 5, title: "Dispatch Alert", desc: "Only eligible customers receive WhatsApp" },
 ];
 
+const templateExamples = [
+  { day: "Day 1", tone: "Polite Reminder", color: "bg-brand-primary/10 text-brand-primary" },
+  { day: "Day 15", tone: "Follow-up", color: "bg-amber-100 text-amber-700" },
+  { day: "Day 30", tone: "Urgent Notice", color: "bg-orange-100 text-orange-700" },
+  { day: "Day 45", tone: "Final Notice", color: "bg-red-100 text-red-700" },
+];
+
 const industries = [
   { icon: Building2, name: "Distributors & Wholesalers", description: "High-volume invoices & collections" },
   { icon: Factory, name: "Manufacturing", description: "Complex billing & dispatch tracking" },
@@ -83,46 +85,15 @@ const industries = [
   { icon: Store, name: "Retail Chains", description: "Multi-location account management" },
 ];
 
-const templateExamples = [
-  { day: "Day 1", tone: "Polite Reminder", example: "Dear {Name}, your invoice #{BillNo} of ₹{Amount} is now due. Please arrange payment at your earliest convenience." },
-  { day: "Day 15", tone: "Follow-up", example: "Dear {Name}, this is a gentle reminder for invoice #{BillNo} (₹{Amount}) now 15 days overdue." },
-  { day: "Day 30", tone: "Urgent Notice", example: "Dear {Name}, invoice #{BillNo} (₹{Amount}) is 30 days overdue. Immediate attention required." },
-  { day: "Day 45", tone: "Final Notice", example: "Dear {Name}, final notice for invoice #{BillNo}. Please clear ₹{Amount} to avoid service disruption." },
-];
-
 const faqs = [
-  { 
-    q: "Who is this system built for?", 
-    a: "The Whats91 Payment Reminder system is engineered specifically for distributors, wholesalers, manufacturers, transport businesses, and multi-company operations utilizing Busy ERP who want to automate their collections process with intelligent, rule-based WhatsApp reminders." 
-  },
-  { 
-    q: "How is this different from bulk WhatsApp messaging?", 
-    a: "This is NOT bulk messaging. Our system evaluates each customer against their specific credit limits, invoice aging, and company segmentation before sending any reminder. It's a controlled financial workflow, not a blast tool." 
-  },
-  { 
-    q: "Can I run the system immediately instead of waiting for a schedule?", 
-    a: "Yes. You can run reminders on a fully automated schedule (daily, weekly, monthly), or trigger immediate, on-demand executions for specific customer sets through the dashboard." 
-  },
-  { 
-    q: "Is it safe to connect with my Busy ERP data?", 
-    a: "Yes. The system operates on secure, role-based access with controlled execution. Full logic validation occurs before any data or message is dispatched. We follow data minimization principles." 
-  },
-  { 
-    q: "What happens if a customer has a ₹1,00,000 credit limit?", 
-    a: "The system remains silent until their outstanding amount explicitly crosses ₹1,00,000. No unnecessary friction with customers who are within their agreed terms." 
-  },
-  { 
-    q: "Can I customize message templates?", 
-    a: "Yes. Map dynamic placeholders (Customer Name, Amount, Bill No., Due Date) into custom templates. Set different tones for different stages—polite reminders for Day 1, strong notices for Day 45." 
-  },
-  { 
-    q: "How does company-wise data isolation work?", 
-    a: "If you manage multiple companies within Busy ERP, Whats91 keeps them strictly separated. Distinct reminder rules, schedules, and message templates for every individual company. Zero data mixing." 
-  },
-  { 
-    q: "Do customers need to opt-in for WhatsApp reminders?", 
-    a: "Yes. For proactive outbound messages, customers must opt-in. We ensure all messages comply with WhatsApp Business Platform policies using approved message templates." 
-  },
+  { q: "Who is this system built for?", a: "The Whats91 Payment Reminder system is engineered specifically for distributors, wholesalers, manufacturers, transport businesses, and multi-company operations utilizing Busy ERP who want to automate their collections process with intelligent, rule-based WhatsApp reminders." },
+  { q: "How is this different from bulk WhatsApp messaging?", a: "This is NOT bulk messaging. Our system evaluates each customer against their specific credit limits, invoice aging, and company segmentation before sending any reminder. It's a controlled financial workflow, not a blast tool." },
+  { q: "Can I run the system immediately instead of waiting for a schedule?", a: "Yes. You can run reminders on a fully automated schedule (daily, weekly, monthly), or trigger immediate, on-demand executions for specific customer sets through the dashboard." },
+  { q: "Is it safe to connect with my Busy ERP data?", a: "Yes. The system operates on secure, role-based access with controlled execution. Full logic validation occurs before any data or message is dispatched. We follow data minimization principles." },
+  { q: "What happens if a customer has a credit limit?", a: "The system remains silent until their outstanding amount explicitly crosses their credit limit. No unnecessary friction with customers who are within their agreed terms." },
+  { q: "Can I customize message templates?", a: "Yes. Map dynamic placeholders (Customer Name, Amount, Bill No., Due Date) into custom templates. Set different tones for different stages—polite reminders for Day 1, strong notices for Day 45." },
+  { q: "How does company-wise data isolation work?", a: "If you manage multiple companies within Busy ERP, Whats91 keeps them strictly separated. Distinct reminder rules, schedules, and message templates for every individual company. Zero data mixing." },
+  { q: "Do customers need to opt-in for WhatsApp reminders?", a: "Yes. For proactive outbound messages, customers must opt-in. We ensure all messages comply with WhatsApp Business Platform policies using approved message templates." },
 ];
 
 const onboardingSteps = [
@@ -134,53 +105,41 @@ const onboardingSteps = [
 
 export default function PaymentRemindersPage() {
   const [openFaq, setOpenFaq] = useState<number | null>(null);
-  const [activeMode, setActiveMode] = useState<"Normal" | "Advanced">("Advanced");
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <Header />
       <main className="flex-1">
         
-        {/* Hero Section - High Contrast */}
-        <section className="relative overflow-hidden py-14 sm:py-16 md:py-20 lg:py-24 bg-slate-900">
-          {/* Subtle Grid Pattern */}
-          <div 
-            className="absolute inset-0 opacity-[0.03]" 
-            style={{
-              backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`
-            }}
-          />
-          
-          {/* Gradient Overlays */}
-          <div className="absolute top-0 right-0 w-1/2 h-full bg-gradient-to-l from-brand-primary/10 to-transparent" />
-          <div className="absolute bottom-0 left-0 w-1/3 h-1/2 bg-gradient-to-t from-brand-accent/10 to-transparent" />
-
+        {/* Hero Section */}
+        <section className="relative overflow-hidden py-14 sm:py-16 md:py-20 lg:py-24 bg-gradient-to-b from-surface/80 to-background">
+          <div className="absolute inset-0 gradient-brand-subtle pointer-events-none" />
           <div className="relative px-4 sm:px-6 lg:px-8 max-w-[1200px] mx-auto">
             <div className="grid gap-10 lg:gap-14 lg:grid-cols-2 items-center">
               
               {/* Left Content */}
               <div className="text-center lg:text-left">
                 {/* Badge */}
-                <div className="inline-flex items-center gap-2 rounded-full bg-brand-primary/20 border border-brand-primary/30 px-4 py-1.5 text-xs sm:text-sm font-medium text-brand-accent mb-5">
+                <div className="inline-flex items-center gap-2 rounded-full bg-brand-primary/10 border border-brand-primary/15 px-4 py-1.5 text-xs sm:text-sm font-medium text-brand-primary mb-5">
                   <Bell className="h-3.5 w-3.5" />
                   Intelligent Payment Reminders
                 </div>
                 
                 {/* Headline */}
-                <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight text-white leading-[1.15] mb-5">
+                <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight text-text-primary leading-[1.15] mb-5">
                   India's Most Advanced WhatsApp Payment Reminder System for Busy ERP
                 </h1>
                 
                 {/* Subheadline */}
-                <p className="text-base sm:text-lg text-slate-300 leading-relaxed mb-6 max-w-xl mx-auto lg:mx-0">
-                  <span className="text-white font-semibold">Stop chasing payments manually.</span> Control your collections intelligently with rule-based WhatsApp reminders.
+                <p className="text-base sm:text-lg text-text-secondary leading-relaxed mb-6 max-w-xl mx-auto lg:mx-0">
+                  <span className="font-semibold text-text-primary">Stop chasing payments manually.</span> Control your collections intelligently with rule-based WhatsApp reminders.
                 </p>
 
                 {/* CTA Buttons */}
                 <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center lg:justify-start mb-8">
                   <Button 
                     size="lg" 
-                    className="h-12 px-7 text-base font-semibold rounded-xl bg-brand-primary text-white hover:bg-brand-primary-hover shadow-lg shadow-brand-primary/30 group"
+                    className="h-12 px-7 text-base font-semibold rounded-xl bg-brand-primary text-brand-primary-foreground hover:bg-brand-primary-hover shadow-lg shadow-brand-primary/25 group"
                   >
                     Schedule a System Demo
                     <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-0.5" />
@@ -188,7 +147,7 @@ export default function PaymentRemindersPage() {
                   <Button 
                     size="lg" 
                     variant="outline" 
-                    className="h-12 px-7 text-base font-semibold rounded-xl border-slate-600 text-white hover:bg-slate-800 hover:text-white"
+                    className="h-12 px-7 text-base font-semibold rounded-xl border-border/80 hover:bg-surface"
                   >
                     Request Setup Consultation
                   </Button>
@@ -197,7 +156,7 @@ export default function PaymentRemindersPage() {
                 {/* Trust Badges */}
                 <div className="flex flex-wrap justify-center lg:justify-start gap-3">
                   {["Rule-Based Logic", "Credit Limit Validation", "Company-Wise Isolation"].map((badge, i) => (
-                    <div key={i} className="flex items-center gap-1.5 text-xs sm:text-sm text-slate-400 bg-slate-800/50 px-3 py-1.5 rounded-full border border-slate-700">
+                    <div key={i} className="flex items-center gap-1.5 text-xs sm:text-sm text-text-muted bg-white/80 px-3 py-1.5 rounded-full border border-border/50">
                       <CheckCircle2 className="h-3.5 w-3.5 text-brand-primary" />
                       {badge}
                     </div>
@@ -207,14 +166,14 @@ export default function PaymentRemindersPage() {
 
               {/* Right - Logic Engine Visual */}
               <div className="relative">
-                <div className="rounded-2xl border border-slate-700 bg-slate-800/50 backdrop-blur-sm p-6 sm:p-8">
+                <div className="rounded-2xl border border-border/60 bg-white p-6 sm:p-8 shadow-lg">
                   <div className="flex items-center gap-3 mb-6">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-primary/20 text-brand-primary">
-                      <Target className="h-5 w-5" />
+                    <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-brand-primary/10 text-brand-primary">
+                      <Target className="h-6 w-6" />
                     </div>
                     <div>
-                      <h3 className="text-base font-semibold text-white">Logic Engine</h3>
-                      <p className="text-xs text-slate-400">Real-time validation sequence</p>
+                      <h3 className="text-lg font-semibold text-text-primary">Logic Engine</h3>
+                      <p className="text-sm text-text-muted">Real-time validation sequence</p>
                     </div>
                   </div>
                   
@@ -222,24 +181,24 @@ export default function PaymentRemindersPage() {
                     {validationSteps.map((step, i) => (
                       <div 
                         key={step.step}
-                        className="flex items-center gap-3 p-3 rounded-lg bg-slate-700/30 border border-slate-700/50"
+                        className="flex items-center gap-3 p-3 rounded-xl bg-surface/50 border border-border/40"
                       >
-                        <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-brand-primary text-white text-xs font-bold">
+                        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-brand-primary text-white text-sm font-bold shadow-md shadow-brand-primary/20">
                           {step.step}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-white truncate">{step.title}</p>
-                          <p className="text-xs text-slate-400 truncate">{step.desc}</p>
+                          <p className="text-sm font-medium text-text-primary truncate">{step.title}</p>
+                          <p className="text-xs text-text-muted truncate">{step.desc}</p>
                         </div>
                         {i < validationSteps.length - 1 && (
-                          <ChevronRight className="h-4 w-4 text-slate-500" />
+                          <ChevronRight className="h-4 w-4 text-text-muted" />
                         )}
                       </div>
                     ))}
                   </div>
                   
-                  <div className="mt-6 p-3 rounded-lg bg-brand-primary/10 border border-brand-primary/20">
-                    <p className="text-xs text-center text-brand-accent font-medium">
+                  <div className="mt-6 p-3 rounded-xl bg-brand-primary/5 border border-brand-primary/10">
+                    <p className="text-xs text-center text-brand-primary font-medium">
                       Only mathematically eligible customers receive alerts
                     </p>
                   </div>
@@ -250,7 +209,7 @@ export default function PaymentRemindersPage() {
         </section>
 
         {/* AI Answer Target - Core Value */}
-        <section className="py-10 sm:py-12 bg-brand-primary/5 border-y border-brand-primary/10">
+        <section className="py-10 sm:py-12 bg-surface/50 border-y border-border/40">
           <div className="px-4 sm:px-6 lg:px-8 max-w-4xl mx-auto">
             <div className="text-center">
               <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-text-primary mb-4">
@@ -283,13 +242,13 @@ export default function PaymentRemindersPage() {
               {logicFilters.map((item, index) => (
                 <div 
                   key={index}
-                  className="group rounded-2xl border border-border/60 bg-white p-5 sm:p-6 transition-all duration-300 hover:border-brand-primary/30 hover:shadow-xl"
+                  className="group rounded-2xl border border-border/60 bg-white p-5 sm:p-6 transition-all duration-300 hover:shadow-xl hover:border-border"
                 >
-                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-brand-primary/10 text-brand-primary mb-4 transition-transform duration-300 group-hover:scale-110">
-                    <item.icon className="h-6 w-6" />
+                  <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-brand-primary/10 text-brand-primary mb-5 transition-transform duration-300 group-hover:scale-110">
+                    <item.icon className="h-7 w-7" />
                   </div>
                   <h4 className="text-base font-semibold text-text-primary mb-2">{item.title}</h4>
-                  <p className="text-sm text-text-secondary mb-3">{item.description}</p>
+                  <p className="text-sm text-text-secondary mb-2">{item.description}</p>
                   <p className="text-xs text-text-muted leading-relaxed">{item.detail}</p>
                 </div>
               ))}
@@ -297,7 +256,7 @@ export default function PaymentRemindersPage() {
           </div>
         </section>
 
-        {/* Execution Modes - Deep Dive */}
+        {/* Execution Modes */}
         <section className="py-12 sm:py-16 md:py-20 bg-surface/50">
           <div className="px-4 sm:px-6 lg:px-8 max-w-[1200px] mx-auto">
             <div className="text-center mb-10 sm:mb-12">
@@ -309,86 +268,46 @@ export default function PaymentRemindersPage() {
               </p>
             </div>
 
-            {/* Mode Toggle */}
-            <div className="flex justify-center mb-8">
-              <div className="inline-flex rounded-xl bg-surface border border-border/60 p-1">
-                {["Normal", "Advanced"].map((mode) => (
-                  <button
-                    key={mode}
-                    onClick={() => setActiveMode(mode as "Normal" | "Advanced")}
-                    className={`px-6 py-2.5 rounded-lg text-sm font-medium transition-all ${
-                      activeMode === mode
-                        ? "bg-brand-primary text-white shadow-md"
-                        : "text-text-secondary hover:text-text-primary"
-                    }`}
-                  >
-                    {mode} Mode
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Mode Content */}
-            <div className="grid lg:grid-cols-2 gap-8">
-              {executionModes.map((mode) => (
+            <div className="grid gap-6 md:grid-cols-2">
+              {executionModes.map((mode, index) => (
                 <div 
-                  key={mode.mode}
-                  className={`rounded-2xl border transition-all duration-300 ${
-                    activeMode === mode.mode 
-                      ? "border-brand-primary/30 bg-white shadow-xl ring-1 ring-brand-primary/10" 
-                      : "border-border/60 bg-white/50 opacity-60"
-                  } p-6 sm:p-8`}
+                  key={index}
+                  className="group rounded-2xl border border-border/60 bg-white p-6 sm:p-8 transition-all duration-300 hover:shadow-xl hover:border-border"
                 >
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className={`flex h-12 w-12 items-center justify-center rounded-xl ${
-                      activeMode === mode.mode ? "bg-brand-primary text-white" : "bg-surface text-text-muted"
-                    }`}>
-                      <mode.icon className="h-6 w-6" />
-                    </div>
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${
-                          mode.mode === "Advanced" ? "bg-brand-primary/10 text-brand-primary" : "bg-surface text-text-muted"
-                        }`}>
-                          {mode.mode === "Advanced" ? "Recommended" : "Standard"}
-                        </span>
-                      </div>
-                      <h3 className="text-lg font-semibold text-text-primary">{mode.title}</h3>
-                    </div>
+                  <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-brand-primary/10 text-brand-primary mb-5 transition-transform duration-300 group-hover:scale-110">
+                    <mode.icon className="h-7 w-7" />
                   </div>
-                  
-                  <p className="text-sm text-text-secondary mb-5">{mode.description}</p>
-                  
-                  <div className="space-y-3">
+                  <h3 className="text-xl sm:text-2xl font-bold text-text-primary mb-2">
+                    {mode.title}
+                  </h3>
+                  <p className="text-sm text-text-muted mb-5">{mode.subtitle}</p>
+                  <ul className="space-y-3">
                     {mode.features.map((feature, i) => (
-                      <div key={i} className="flex items-start gap-3">
+                      <li key={i} className="flex items-start gap-2.5 text-sm sm:text-base text-text-secondary">
                         <CheckCircle2 className="h-5 w-5 text-brand-primary shrink-0 mt-0.5" />
-                        <div>
-                          <p className="text-sm font-medium text-text-primary">{feature.title}</p>
-                          <p className="text-xs text-text-muted">{feature.desc}</p>
-                        </div>
-                      </div>
+                        {feature}
+                      </li>
                     ))}
-                  </div>
+                  </ul>
                 </div>
               ))}
             </div>
 
-            {/* Advanced Mode Examples */}
-            <div className="mt-10 rounded-2xl border border-border/60 bg-white p-6 sm:p-8">
-              <h3 className="text-lg font-semibold text-text-primary mb-6 flex items-center gap-2">
+            {/* Real-World Examples */}
+            <div className="mt-10 rounded-2xl border border-brand-primary/20 bg-brand-primary/[0.03] p-5 sm:p-6">
+              <h3 className="text-lg font-semibold text-text-primary mb-4 flex items-center gap-2">
                 <Zap className="h-5 w-5 text-brand-primary" />
                 Advanced Mode: Real-World Examples
               </h3>
               
-              <div className="grid sm:grid-cols-2 gap-6">
-                <div className="p-4 rounded-xl bg-brand-primary/5 border border-brand-primary/10">
+              <div className="grid sm:grid-cols-2 gap-4">
+                <div className="p-4 rounded-xl bg-white border border-border/60">
                   <p className="text-sm font-semibold text-text-primary mb-2">Example A: Credit Limit Validation</p>
                   <p className="text-sm text-text-secondary leading-relaxed">
-                    If a client has a <span className="font-medium text-text-primary">₹1,00,000 credit limit</span>, the system remains silent until their outstanding amount explicitly crosses ₹1,00,000. <span className="text-brand-primary font-medium">No unnecessary friction.</span>
+                    If a client has a <span className="font-medium text-text-primary">₹1,00,000 credit limit</span>, the system remains silent until their outstanding amount crosses that limit. <span className="text-brand-primary font-medium">No unnecessary friction.</span>
                   </p>
                 </div>
-                <div className="p-4 rounded-xl bg-brand-primary/5 border border-brand-primary/10">
+                <div className="p-4 rounded-xl bg-white border border-border/60">
                   <p className="text-sm font-semibold text-text-primary mb-2">Example B: Invoice Aging Logic</p>
                   <p className="text-sm text-text-secondary leading-relaxed">
                     If a customer has a <span className="font-medium text-text-primary">strict 15-day credit period</span>, zero reminders are sent until the invoice age hits day 16. <span className="text-brand-primary font-medium">Clients hear from you only when terms are breached.</span>
@@ -408,11 +327,11 @@ export default function PaymentRemindersPage() {
               </h2>
             </div>
 
-            <div className="grid lg:grid-cols-2 gap-8">
+            <div className="grid lg:grid-cols-2 gap-6">
               {/* Company-Wise Isolation */}
               <div className="rounded-2xl border border-border/60 bg-white p-6 sm:p-8">
                 <div className="flex items-center gap-3 mb-4">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-brand-primary/10 text-brand-primary">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-brand-primary/10 text-brand-primary">
                     <Building2 className="h-6 w-6" />
                   </div>
                   <h3 className="text-xl font-semibold text-text-primary">Company-Wise Data Isolation</h3>
@@ -420,14 +339,14 @@ export default function PaymentRemindersPage() {
                 <p className="text-sm text-text-secondary mb-4">
                   If you manage multiple companies within Busy ERP, Whats91 keeps them strictly separated.
                 </p>
-                <ul className="space-y-2">
+                <ul className="space-y-2.5">
                   {[
                     "Distinct reminder rules per company",
                     "Separate schedules for each business unit",
                     "Unique message templates per entity",
                     "Zero data mixing between companies"
                   ].map((item, i) => (
-                    <li key={i} className="flex items-center gap-2 text-sm text-text-secondary">
+                    <li key={i} className="flex items-center gap-2.5 text-sm text-text-secondary">
                       <CheckCircle2 className="h-4 w-4 text-brand-primary shrink-0" />
                       {item}
                     </li>
@@ -438,52 +357,95 @@ export default function PaymentRemindersPage() {
               {/* Custom Template Mapping */}
               <div className="rounded-2xl border border-border/60 bg-white p-6 sm:p-8">
                 <div className="flex items-center gap-3 mb-4">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-brand-primary/10 text-brand-primary">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-brand-primary/10 text-brand-primary">
                     <FileText className="h-6 w-6" />
                   </div>
                   <h3 className="text-xl font-semibold text-text-primary">Custom Template Mapping</h3>
                 </div>
                 <p className="text-sm text-text-secondary mb-4">
-                  Control your tone with dynamic placeholders: <span className="font-mono text-xs bg-surface px-1 rounded">{"{Name}"}</span>, <span className="font-mono text-xs bg-surface px-1 rounded">{"{Amount}"}</span>, <span className="font-mono text-xs bg-surface px-1 rounded">{"{BillNo}"}</span>, <span className="font-mono text-xs bg-surface px-1 rounded">{"{DueDate}"}</span>
+                  Control your tone with dynamic placeholders: <span className="font-mono text-xs bg-surface px-1.5 py-0.5 rounded">{"{Name}"}</span>, <span className="font-mono text-xs bg-surface px-1.5 py-0.5 rounded">{"{Amount}"}</span>, <span className="font-mono text-xs bg-surface px-1.5 py-0.5 rounded">{"{BillNo}"}</span>, <span className="font-mono text-xs bg-surface px-1.5 py-0.5 rounded">{"{DueDate}"}</span>
                 </p>
-                <div className="space-y-2">
-                  {templateExamples.slice(0, 3).map((template) => (
-                    <div key={template.day} className="flex items-center gap-3 p-2 rounded-lg bg-surface/50">
-                      <span className="text-xs font-medium text-brand-primary w-16">{template.day}</span>
+                <div className="grid grid-cols-2 gap-2">
+                  {templateExamples.map((template) => (
+                    <div key={template.day} className="flex items-center gap-2 p-2 rounded-lg bg-surface/50">
+                      <span className={`text-xs font-medium px-2 py-1 rounded ${template.color}`}>{template.day}</span>
                       <span className="text-xs text-text-muted">{template.tone}</span>
                     </div>
                   ))}
                 </div>
               </div>
             </div>
+          </div>
+        </section>
 
-            {/* System Validation Sequence */}
-            <div className="mt-8 rounded-2xl border border-border/60 bg-slate-900 p-6 sm:p-8">
-              <h3 className="text-lg font-semibold text-white mb-2">System Validation Sequence</h3>
-              <p className="text-sm text-slate-400 mb-6">Every message must pass strict validation before dispatch</p>
-              
-              <div className="grid sm:grid-cols-2 lg:grid-cols-5 gap-3">
-                {validationSteps.map((step, i) => (
-                  <div key={step.step} className="relative">
-                    <div className="flex flex-col items-center text-center p-4 rounded-xl bg-slate-800/50 border border-slate-700">
-                      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-brand-primary text-white text-sm font-bold mb-3">
-                        {step.step}
-                      </div>
-                      <p className="text-sm font-medium text-white mb-1">{step.title}</p>
-                      <p className="text-xs text-slate-400">{step.desc}</p>
+        {/* Validation Sequence */}
+        <section className="py-12 sm:py-16 md:py-20 bg-surface/50">
+          <div className="px-4 sm:px-6 lg:px-8 max-w-[1200px] mx-auto">
+            <div className="text-center mb-10 sm:mb-12">
+              <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight text-text-primary mb-4">
+                System Validation Sequence
+              </h2>
+              <p className="text-sm sm:text-base text-text-secondary max-w-2xl mx-auto">
+                Every message must pass strict validation before dispatch
+              </p>
+            </div>
+
+            <div className="grid gap-4 sm:gap-5 grid-cols-1 sm:grid-cols-2 lg:grid-cols-5">
+              {validationSteps.map((item, i) => (
+                <div key={item.step} className="relative">
+                  <div className="rounded-xl border border-border/60 bg-white p-5 h-full text-center">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-full bg-brand-primary text-white text-lg font-bold mb-4 shadow-md shadow-brand-primary/20 mx-auto">
+                      {item.step}
                     </div>
-                    {i < validationSteps.length - 1 && (
-                      <ArrowRight className="hidden lg:block absolute top-1/2 -right-2 h-4 w-4 text-brand-primary -translate-y-1/2" />
-                    )}
+                    <h4 className="text-base font-semibold text-text-primary mb-2">{item.title}</h4>
+                    <p className="text-sm text-text-secondary">{item.desc}</p>
                   </div>
-                ))}
+                  {i < validationSteps.length - 1 && (
+                    <ChevronRight className="hidden lg:block absolute top-1/2 -right-2.5 h-5 w-5 text-brand-primary -translate-y-1/2" />
+                  )}
+                </div>
+              ))}
+            </div>
+
+            <div className="mt-8 rounded-xl border border-brand-primary/20 bg-brand-primary/[0.03] p-4 max-w-2xl mx-auto">
+              <p className="text-sm text-text-secondary text-center">
+                <span className="font-medium text-text-primary">Result:</span> Only mathematically eligible customers receive an automated WhatsApp alert
+              </p>
+            </div>
+          </div>
+        </section>
+
+        {/* Security & Compliance */}
+        <section className="py-12 sm:py-16 md:py-20">
+          <div className="px-4 sm:px-6 lg:px-8 max-w-[1200px] mx-auto">
+            <div className="text-center mb-10 sm:mb-12">
+              <div className="inline-flex items-center gap-2 rounded-full bg-brand-primary/10 border border-brand-primary/10 px-4 py-1.5 text-xs sm:text-sm font-medium text-brand-primary mb-4">
+                <Shield className="h-3.5 w-3.5" />
+                Security & Compliance
               </div>
-              
-              <div className="mt-6 p-4 rounded-xl bg-brand-primary/10 border border-brand-primary/20 text-center">
-                <p className="text-sm text-brand-accent font-medium">
-                  Result: Only mathematically eligible customers receive an automated WhatsApp alert
-                </p>
-              </div>
+              <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight text-text-primary mb-4">
+                Built for accounting-grade security
+              </h2>
+            </div>
+
+            <div className="grid gap-4 sm:gap-5 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+              {[
+                { icon: Lock, title: "Role-Based Access", desc: "Control who can send reminders" },
+                { icon: FileCheck, title: "Audit Logs", desc: "Track every message dispatched" },
+                { icon: Shield, title: "Data Minimization", desc: "Send only what's required" },
+                { icon: FileText, title: "Template Compliance", desc: "Opt-in required for outbound" },
+              ].map((item, i) => (
+                <div 
+                  key={i}
+                  className="group rounded-xl border border-border/60 bg-white p-5 text-center transition-all duration-300 hover:border-border hover:shadow-md"
+                >
+                  <div className="inline-flex h-11 w-11 items-center justify-center rounded-xl bg-brand-primary/10 text-brand-primary mb-4 transition-transform duration-300 group-hover:scale-110">
+                    <item.icon className="h-5 w-5" />
+                  </div>
+                  <h4 className="text-sm font-semibold text-text-primary mb-1">{item.title}</h4>
+                  <p className="text-xs text-text-secondary">{item.desc}</p>
+                </div>
+              ))}
             </div>
           </div>
         </section>
@@ -493,7 +455,7 @@ export default function PaymentRemindersPage() {
           <div className="px-4 sm:px-6 lg:px-8 max-w-[1200px] mx-auto">
             <div className="text-center mb-10 sm:mb-12">
               <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight text-text-primary mb-4">
-                Built For
+                Who this is for
               </h2>
             </div>
 
@@ -514,12 +476,12 @@ export default function PaymentRemindersPage() {
           </div>
         </section>
 
-        {/* Quick Setup */}
+        {/* Setup & Onboarding */}
         <section className="py-12 sm:py-16 md:py-20">
           <div className="px-4 sm:px-6 lg:px-8 max-w-[900px] mx-auto">
             <div className="text-center mb-10 sm:mb-12">
               <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight text-text-primary mb-4">
-                Quick Setup, Fast Results
+                Quick setup, fast results
               </h2>
             </div>
 
@@ -548,14 +510,13 @@ export default function PaymentRemindersPage() {
           </div>
         </section>
 
-        {/* AI-Optimized FAQ */}
+        {/* FAQ Section */}
         <section className="py-12 sm:py-16 md:py-20 bg-surface/50">
           <div className="px-4 sm:px-6 lg:px-8 max-w-[900px] mx-auto">
             <div className="text-center mb-10 sm:mb-12">
               <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight text-text-primary mb-4">
                 Frequently Asked Questions
               </h2>
-              <p className="text-sm text-text-muted">Optimized for AI search and voice queries</p>
             </div>
 
             <div className="space-y-3">
@@ -589,12 +550,12 @@ export default function PaymentRemindersPage() {
         {/* Final CTA */}
         <section className="py-14 sm:py-16 md:py-20">
           <div className="px-4 sm:px-6 lg:px-8 max-w-[1200px] mx-auto">
-            <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-slate-900 p-7 sm:p-8 md:p-12 lg:p-16 shadow-xl">
+            <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-br from-brand-primary via-brand-primary to-brand-accent p-7 sm:p-8 md:p-12 lg:p-16 shadow-xl">
               
               {/* Background Decorations */}
               <div className="absolute inset-0 overflow-hidden pointer-events-none">
-                <div className="absolute -top-1/2 -right-1/4 w-72 sm:w-96 h-72 sm:h-96 bg-brand-primary/20 rounded-full blur-3xl" />
-                <div className="absolute -bottom-1/2 -left-1/4 w-72 sm:w-96 h-72 sm:h-96 bg-brand-accent/20 rounded-full blur-3xl" />
+                <div className="absolute -top-1/2 -right-1/4 w-72 sm:w-96 h-72 sm:h-96 bg-white/10 rounded-full blur-3xl" />
+                <div className="absolute -bottom-1/2 -left-1/4 w-72 sm:w-96 h-72 sm:h-96 bg-white/10 rounded-full blur-3xl" />
               </div>
 
               {/* Content */}
@@ -602,14 +563,14 @@ export default function PaymentRemindersPage() {
                 <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight text-white mb-4">
                   Automate Your Busy ERP Collections Today
                 </h2>
-                <p className="text-base sm:text-lg text-slate-300 mb-8">
+                <p className="text-base sm:text-lg text-white/90 mb-8">
                   Stop letting outstanding payments drain your operational time. Let Whats91 upgrade your workflow with intelligent, automated follow-ups.
                 </p>
 
                 <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
                   <Button 
                     size="lg" 
-                    className="h-12 px-7 text-base font-semibold bg-brand-primary text-white hover:bg-brand-primary-hover rounded-xl shadow-lg group"
+                    className="h-12 px-7 text-base font-semibold bg-white text-brand-primary hover:bg-white/95 rounded-xl shadow-lg group"
                   >
                     Schedule a Technical Demo
                     <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-0.5" />
