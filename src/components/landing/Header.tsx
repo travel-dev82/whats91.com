@@ -8,7 +8,8 @@ import { Menu, X, MessageCircle, ChevronRight } from "lucide-react";
 
 const navItems = [
   { label: "Solutions", href: "#solutions" },
-  { label: "Busy ERP", href: "#busy-erp" },
+  { label: "Busy ERP", href: "/solutions/busy-erp" },
+  { label: "Blog", href: "/blog" },
   { label: "Developers", href: "#developers" },
   { label: "Security", href: "#security" },
 ];
