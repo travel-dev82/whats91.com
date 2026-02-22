@@ -9,7 +9,6 @@ import {
   FileText,
   FileCode,
   ArrowRight,
-  ArrowLeft,
   CheckCircle2,
   RefreshCw,
   Shield,
@@ -33,9 +32,9 @@ const endpoints: EndpointType[] = [
 ];
 
 const outputFormats = [
-  { id: "json", icon: FileJson, label: "JSON", color: "text-amber-400", desc: "Raw data for apps" },
-  { id: "html", icon: FileCode, label: "HTML", color: "text-blue-400", desc: "Ready for portals" },
-  { id: "pdf", icon: FileText, label: "PDF", color: "text-red-400", desc: "Print-ready docs" },
+  { id: "json", icon: FileJson, label: "JSON", color: "text-amber-600", bgColor: "bg-amber-50" },
+  { id: "html", icon: FileCode, label: "HTML", color: "text-blue-600", bgColor: "bg-blue-50" },
+  { id: "pdf", icon: FileText, label: "PDF", color: "text-red-600", bgColor: "bg-red-50" },
 ];
 
 function CodeBlock() {
@@ -54,11 +53,7 @@ function CodeBlock() {
       "61-90": 28000,
       "90+": 20000
     },
-    "last_payment": "2026-01-15",
-    "bills": [
-      { "ref": "INV-2501", "amount": 45000, "due": "2026-01-20" },
-      { "ref": "INV-2452", "amount": 32000, "due": "2026-01-05" }
-    ]
+    "last_payment": "2026-01-15"
   }
 }`;
 
@@ -96,29 +91,29 @@ function CodeBlock() {
   }, []);
 
   return (
-    <div className="rounded-xl border border-slate-700 bg-slate-900 overflow-hidden">
+    <div className="rounded-xl border border-border/60 bg-white overflow-hidden shadow-lg">
       {/* Header */}
-      <div className="flex items-center justify-between px-3 py-2 bg-slate-800 border-b border-slate-700">
+      <div className="flex items-center justify-between px-3 py-2 bg-surface border-b border-border/40">
         <div className="flex items-center gap-2">
-          <div className="h-2.5 w-2.5 rounded-full bg-red-500" />
-          <div className="h-2.5 w-2.5 rounded-full bg-amber-500" />
-          <div className="h-2.5 w-2.5 rounded-full bg-green-500" />
+          <div className="h-2.5 w-2.5 rounded-full bg-red-400" />
+          <div className="h-2.5 w-2.5 rounded-full bg-amber-400" />
+          <div className="h-2.5 w-2.5 rounded-full bg-green-400" />
         </div>
-        <span className="text-[10px] text-slate-500 font-mono">api.whats91.com</span>
+        <span className="text-[10px] text-text-muted font-mono">api.whats91.com</span>
       </div>
 
       {/* Endpoint Selector */}
-      <div className="px-3 py-2 border-b border-slate-700 bg-slate-800/50">
+      <div className="px-3 py-2 border-b border-border/40 bg-surface/50">
         <div className="flex items-center gap-2">
-          <span className="px-1.5 py-0.5 text-[10px] font-bold text-green-400 bg-green-400/10 rounded">GET</span>
-          <span className="text-xs font-mono text-slate-300">{endpoints[activeEndpoint].path}</span>
+          <span className="px-1.5 py-0.5 text-[10px] font-bold text-green-600 bg-green-100 rounded">GET</span>
+          <span className="text-xs font-mono text-text-primary">{endpoints[activeEndpoint].path}</span>
         </div>
-        <p className="text-[10px] text-slate-500 mt-1">{endpoints[activeEndpoint].description}</p>
+        <p className="text-[10px] text-text-muted mt-1">{endpoints[activeEndpoint].description}</p>
       </div>
 
       {/* Response */}
-      <div className="p-3 font-mono text-[10px] leading-relaxed">
-        <pre className="text-slate-300 whitespace-pre-wrap">
+      <div className="p-3 font-mono text-[10px] leading-relaxed bg-slate-50">
+        <pre className="text-text-secondary whitespace-pre-wrap">
           {response}
           {isTyping && <span className="animate-pulse text-brand-primary">▋</span>}
         </pre>
@@ -150,11 +145,11 @@ function ArchitectureDiagram() {
   }, []);
 
   return (
-    <div className="rounded-xl border border-slate-700 bg-slate-900 p-4">
+    <div className="rounded-xl border border-border/60 bg-white p-4">
       <div className="flex items-center justify-between mb-4">
-        <span className="text-xs font-medium text-slate-300">Data Flow Architecture</span>
-        <div className="flex items-center gap-1 text-[10px] text-green-400">
-          <div className="h-1.5 w-1.5 rounded-full bg-green-400 animate-pulse" />
+        <span className="text-xs font-medium text-text-primary">Data Flow Architecture</span>
+        <div className="flex items-center gap-1 text-[10px] text-green-600">
+          <div className="h-1.5 w-1.5 rounded-full bg-green-500 animate-pulse" />
           Live
         </div>
       </div>
@@ -164,43 +159,43 @@ function ArchitectureDiagram() {
         {/* Source */}
         <div className="flex items-center gap-3">
           <div className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-all ${
-            activeFlow === 0 ? "bg-brand-primary/20 ring-1 ring-brand-primary/40" : "bg-slate-800"
+            activeFlow === 0 ? "bg-brand-primary/10 ring-1 ring-brand-primary/30" : "bg-surface"
           }`}>
             <Database className="h-4 w-4 text-brand-primary" />
             <div>
-              <p className="text-xs font-medium text-slate-200">Busy ERP</p>
-              <p className="text-[9px] text-slate-500">On-premise data</p>
+              <p className="text-xs font-medium text-text-primary">Busy ERP</p>
+              <p className="text-[9px] text-text-muted">On-premise data</p>
             </div>
           </div>
-          <ArrowRight className={`h-4 w-4 transition-all ${activeFlow >= 1 && dataPulse ? "text-brand-primary" : "text-slate-600"}`} />
+          <ArrowRight className={`h-4 w-4 transition-all ${activeFlow >= 1 && dataPulse ? "text-brand-primary" : "text-border"}`} />
         </div>
 
         {/* API Server */}
         <div className="flex items-center gap-3">
           <div className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-all ${
-            activeFlow === 1 ? "bg-brand-primary/20 ring-1 ring-brand-primary/40" : "bg-slate-800"
+            activeFlow === 1 ? "bg-brand-primary/10 ring-1 ring-brand-primary/30" : "bg-surface"
           }`}>
             <Server className="h-4 w-4 text-brand-primary" />
             <div>
-              <p className="text-xs font-medium text-slate-200">API Server</p>
-              <p className="text-[9px] text-slate-500">Secure gateway</p>
+              <p className="text-xs font-medium text-text-primary">API Server</p>
+              <p className="text-[9px] text-text-muted">Secure gateway</p>
             </div>
           </div>
-          <ArrowRight className={`h-4 w-4 transition-all ${activeFlow >= 2 && dataPulse ? "text-brand-primary" : "text-slate-600"}`} />
+          <ArrowRight className={`h-4 w-4 transition-all ${activeFlow >= 2 && dataPulse ? "text-brand-primary" : "text-border"}`} />
         </div>
 
         {/* Output Formats */}
         <div className="flex items-center gap-3">
           <div className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-all ${
-            activeFlow >= 2 ? "bg-brand-primary/20 ring-1 ring-brand-primary/40" : "bg-slate-800"
+            activeFlow >= 2 ? "bg-brand-primary/10 ring-1 ring-brand-primary/30" : "bg-surface"
           }`}>
             <Code2 className="h-4 w-4 text-brand-primary" />
             <div>
-              <p className="text-xs font-medium text-slate-200">Transform</p>
-              <p className="text-[9px] text-slate-500">Format output</p>
+              <p className="text-xs font-medium text-text-primary">Transform</p>
+              <p className="text-[9px] text-text-muted">Format output</p>
             </div>
           </div>
-          <ArrowRight className={`h-4 w-4 transition-all ${activeFlow >= 3 && dataPulse ? "text-brand-primary" : "text-slate-600"}`} />
+          <ArrowRight className={`h-4 w-4 transition-all ${activeFlow >= 3 && dataPulse ? "text-brand-primary" : "text-border"}`} />
         </div>
 
         {/* Formats */}
@@ -209,13 +204,12 @@ function ArchitectureDiagram() {
             <div 
               key={format.id}
               className={`flex-1 flex items-center gap-1.5 p-2 rounded-lg transition-all ${
-                activeFlow === 3 && i === (activeFlow % 3) ? "bg-slate-800 ring-1 ring-slate-600" : "bg-slate-800/50"
-              }`}
+                activeFlow === 3 && i === (activeFlow % 3) ? "ring-1 ring-border" : ""
+              } ${format.bgColor}`}
             >
               <format.icon className={`h-3.5 w-3.5 ${format.color}`} />
               <div>
-                <p className="text-[10px] font-medium text-slate-300">{format.label}</p>
-                <p className="text-[8px] text-slate-500">{format.desc}</p>
+                <p className="text-[10px] font-medium text-text-primary">{format.label}</p>
               </div>
             </div>
           ))}
@@ -227,9 +221,9 @@ function ArchitectureDiagram() {
 
 function SecurityBadge({ icon: Icon, label }: { icon: React.ElementType; label: string }) {
   return (
-    <div className="flex items-center gap-2 px-2 py-1.5 rounded-lg bg-slate-800/50 border border-slate-700">
+    <div className="flex items-center gap-2 px-2 py-1.5 rounded-lg bg-surface border border-border/40">
       <Icon className="h-3.5 w-3.5 text-brand-primary" />
-      <span className="text-[10px] text-slate-300">{label}</span>
+      <span className="text-[10px] text-text-secondary">{label}</span>
     </div>
   );
 }
@@ -249,24 +243,24 @@ export function AnimatedAPIArchitecture() {
 
   return (
     <div className="relative">
-      <div className="rounded-2xl bg-slate-950 border border-slate-800 p-4 sm:p-5 shadow-xl max-w-[450px] mx-auto">
+      <div className="rounded-2xl bg-surface/60 border border-border/50 p-4 sm:p-5 shadow-lg backdrop-blur-sm max-w-[420px] mx-auto">
         {/* Header */}
-        <div className="flex items-center justify-between mb-4 pb-3 border-b border-slate-800">
+        <div className="flex items-center justify-between mb-4 pb-3 border-b border-border/60">
           <div className="flex items-center gap-2.5">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-brand-primary shadow-md shadow-brand-primary/30">
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-brand-primary shadow-md shadow-brand-primary/20">
               <Code2 className="h-5 w-5 text-white" />
             </div>
             <div>
-              <p className="text-sm font-semibold text-white">REST API Engine</p>
-              <p className="text-[10px] text-slate-400 flex items-center gap-1">
+              <p className="text-sm font-semibold text-text-primary">REST API Engine</p>
+              <p className="text-[10px] text-text-muted flex items-center gap-1">
                 <span className="h-1.5 w-1.5 rounded-full bg-green-500" />
                 {uptime}% Uptime • {requestCount.toLocaleString()} requests today
               </p>
             </div>
           </div>
-          <div className="hidden sm:flex items-center gap-1 px-2 py-1 bg-slate-800 rounded-full">
+          <div className="hidden sm:flex items-center gap-1 px-2 py-1 bg-brand-primary/10 rounded-full">
             <Lock className="h-3 w-3 text-brand-primary" />
-            <span className="text-[10px] font-medium text-slate-300">Token Auth</span>
+            <span className="text-[10px] font-medium text-brand-primary">Token Auth</span>
           </div>
         </div>
 
@@ -289,9 +283,9 @@ export function AnimatedAPIArchitecture() {
         </div>
 
         {/* Footer */}
-        <div className="pt-3 border-t border-slate-800">
+        <div className="pt-3 border-t border-border/60">
           <div className="flex items-center justify-between text-xs">
-            <div className="flex items-center gap-1.5 text-slate-400">
+            <div className="flex items-center gap-1.5 text-text-muted">
               <Zap className="h-3 w-3" />
               <span>Sub-100ms response time</span>
             </div>
@@ -304,14 +298,14 @@ export function AnimatedAPIArchitecture() {
       </div>
 
       {/* Floating Badge */}
-      <div className="absolute -bottom-3 -right-3 sm:right-0 hidden sm:flex rounded-xl bg-slate-900 border border-slate-700 px-3 py-2 shadow-lg">
+      <div className="absolute -bottom-3 -right-3 sm:right-0 hidden sm:flex rounded-xl bg-white border border-border/60 px-3 py-2 shadow-lg">
         <div className="flex items-center gap-2">
-          <div className="h-7 w-7 rounded-full bg-slate-800 flex items-center justify-center">
-            <FileJson className="h-3.5 w-3.5 text-amber-400" />
+          <div className="h-7 w-7 rounded-full bg-amber-50 flex items-center justify-center">
+            <FileJson className="h-3.5 w-3.5 text-amber-600" />
           </div>
           <div>
-            <p className="text-xs font-semibold text-white">JSON • HTML • PDF</p>
-            <p className="text-[10px] text-slate-400">Multi-format output</p>
+            <p className="text-xs font-semibold text-text-primary">JSON • HTML • PDF</p>
+            <p className="text-[10px] text-text-muted">Multi-format output</p>
           </div>
         </div>
       </div>

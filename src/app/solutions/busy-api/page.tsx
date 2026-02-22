@@ -23,13 +23,14 @@ import {
   Shield,
   Lock,
   Clock,
+  FileCheck,
   ChevronDown,
   ChevronUp,
   Layers,
   Globe,
   Cpu,
   Settings,
-  ArrowLeft
+  MessageCircle
 } from "lucide-react";
 import { useState } from "react";
 
@@ -47,25 +48,28 @@ const outputFormats = [
     title: "JSON Ledger API",
     description: "Structured raw data payload for deep system integration and custom UI rendering.",
     features: ["Invoice dates & aging details", "Debit/credit breakups", "Bill-by-bill data", "Customer-wise grouping"],
-    color: "text-amber-500",
-    bgColor: "bg-amber-500/10",
   },
   {
     icon: FileCode,
     title: "HTML Ledger API",
     description: "Beautifully formatted, responsive HTML ledger. Inject directly into portals with zero front-end coding.",
     features: ["Responsive design", "Print-ready styling", "Zero CSS needed", "Instant integration"],
-    color: "text-blue-500",
-    bgColor: "bg-blue-500/10",
   },
   {
     icon: FileText,
     title: "PDF Ledger API",
     description: "Ready-to-share, printable PDF generated on the fly. Perfect for email workflows and WhatsApp sharing.",
     features: ["Professional formatting", "Auto-generated", "Email attachments", "WhatsApp ready"],
-    color: "text-red-500",
-    bgColor: "bg-red-500/10",
   },
+];
+
+const endpoints = [
+  { method: "GET", path: "/api/v1/ledger", description: "Fetch ledger data" },
+  { method: "GET", path: "/api/v1/outstanding", description: "Outstanding bills" },
+  { method: "GET", path: "/api/v1/sales", description: "Sales summary" },
+  { method: "GET", path: "/api/v1/inventory", description: "Stock levels" },
+  { method: "GET", path: "/api/v1/ledger/html", description: "HTML formatted ledger" },
+  { method: "GET", path: "/api/v1/ledger/pdf", description: "PDF ledger document" },
 ];
 
 const integrationTargets = [
@@ -108,49 +112,38 @@ export default function BusyAPIPage() {
       <Header />
       <main className="flex-1">
         
-        {/* Hero Section - Dark Theme */}
-        <section className="relative overflow-hidden py-14 sm:py-16 md:py-20 lg:py-24 bg-slate-950">
-          {/* Subtle Grid Pattern */}
-          <div 
-            className="absolute inset-0 opacity-[0.03]" 
-            style={{
-              backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`
-            }}
-          />
-          
-          {/* Gradient Overlays */}
-          <div className="absolute top-0 right-0 w-1/2 h-full bg-gradient-to-l from-brand-primary/5 to-transparent" />
-          <div className="absolute bottom-0 left-0 w-1/3 h-1/2 bg-gradient-to-t from-brand-accent/5 to-transparent" />
-
+        {/* Hero Section */}
+        <section className="relative overflow-hidden py-14 sm:py-16 md:py-20 lg:py-24 bg-gradient-to-b from-surface/80 to-background">
+          <div className="absolute inset-0 gradient-brand-subtle pointer-events-none" />
           <div className="relative px-4 sm:px-6 lg:px-8 max-w-[1200px] mx-auto">
             <div className="grid gap-10 lg:gap-14 lg:grid-cols-2 items-center">
               
               {/* Left Content */}
               <div className="text-center lg:text-left">
                 {/* Badge */}
-                <div className="inline-flex items-center gap-2 rounded-full bg-brand-primary/20 border border-brand-primary/30 px-4 py-1.5 text-xs sm:text-sm font-medium text-brand-primary mb-5">
+                <div className="inline-flex items-center gap-2 rounded-full bg-brand-primary/10 border border-brand-primary/15 px-4 py-1.5 text-xs sm:text-sm font-medium text-brand-primary mb-5">
                   <Code2 className="h-3.5 w-3.5" />
                   Developer API
                 </div>
                 
                 {/* Headline */}
-                <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight text-white leading-[1.15] mb-5">
+                <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight text-text-primary leading-[1.15] mb-5">
                   Secure, Real-Time API Access for Busy Accounting Software
                 </h1>
                 
                 {/* Subheadline */}
-                <p className="text-base sm:text-lg text-slate-300 leading-relaxed mb-6 max-w-xl mx-auto lg:mx-0">
-                  <span className="text-white font-semibold">Standard Endpoints | Custom SQL Queries | 24/7 Data Availability</span>
+                <p className="text-base sm:text-lg text-text-secondary leading-relaxed mb-6 max-w-xl mx-auto lg:mx-0">
+                  <span className="font-semibold text-text-primary">Standard Endpoints | Custom SQL Queries | 24/7 Data Availability</span>
                 </p>
-                <p className="text-sm sm:text-base text-slate-400 leading-relaxed mb-6 max-w-xl mx-auto lg:mx-0">
-                  Unlock the full power of your financial data. The Whats91 API engine transforms on-premise Busy Accounting Software into a cloud-ready data source. Integrate your ledger, inventory, and outstanding data directly into your CRM, custom mobile apps, e-commerce platforms, or enterprise dashboards.
+                <p className="text-sm sm:text-base text-text-secondary leading-relaxed mb-6 max-w-xl mx-auto lg:mx-0">
+                  Unlock the full power of your financial data. The Whats91 API engine transforms on-premise Busy Accounting Software into a cloud-ready data source. Integrate your ledger, inventory, and outstanding data directly into your CRM, custom mobile apps, or enterprise dashboards.
                 </p>
 
                 {/* CTA Buttons */}
                 <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center lg:justify-start mb-8">
                   <Button 
                     size="lg" 
-                    className="h-12 px-7 text-base font-semibold rounded-xl bg-brand-primary text-white hover:bg-brand-primary-hover shadow-lg shadow-brand-primary/30 group"
+                    className="h-12 px-7 text-base font-semibold rounded-xl bg-brand-primary text-brand-primary-foreground hover:bg-brand-primary-hover shadow-lg shadow-brand-primary/25 group"
                   >
                     Request API Documentation
                     <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-0.5" />
@@ -158,7 +151,7 @@ export default function BusyAPIPage() {
                   <Button 
                     size="lg" 
                     variant="outline" 
-                    className="h-12 px-7 text-base font-semibold rounded-xl border-slate-600 text-white hover:bg-slate-800 hover:text-white"
+                    className="h-12 px-7 text-base font-semibold rounded-xl border-border/80 hover:bg-surface"
                   >
                     Schedule Technical Scoping
                   </Button>
@@ -167,7 +160,7 @@ export default function BusyAPIPage() {
                 {/* Trust Badges */}
                 <div className="flex flex-wrap justify-center lg:justify-start gap-3">
                   {["REST API", "JSON • HTML • PDF", "99.99% Uptime"].map((badge, i) => (
-                    <div key={i} className="flex items-center gap-1.5 text-xs sm:text-sm text-slate-400 bg-slate-800/50 px-3 py-1.5 rounded-full border border-slate-700">
+                    <div key={i} className="flex items-center gap-1.5 text-xs sm:text-sm text-text-muted bg-white/80 px-3 py-1.5 rounded-full border border-border/50">
                       <CheckCircle2 className="h-3.5 w-3.5 text-brand-primary" />
                       {badge}
                     </div>
@@ -246,21 +239,21 @@ export default function BusyAPIPage() {
               </p>
             </div>
 
-            <div className="grid gap-5 sm:gap-6 grid-cols-1 md:grid-cols-3">
+            <div className="grid gap-6 md:grid-cols-3">
               {outputFormats.map((format, index) => (
                 <div 
                   key={index}
-                  className="group rounded-2xl border border-border/60 bg-white p-5 sm:p-6 transition-all duration-300 hover:shadow-xl hover:border-border"
+                  className="group rounded-2xl border border-border/60 bg-white p-6 sm:p-8 transition-all duration-300 hover:shadow-xl hover:border-border"
                 >
-                  <div className={`flex h-14 w-14 items-center justify-center rounded-2xl ${format.bgColor} mb-5 transition-transform duration-300 group-hover:scale-110`}>
-                    <format.icon className={`h-7 w-7 ${format.color}`} />
+                  <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-brand-primary/10 text-brand-primary mb-5 transition-transform duration-300 group-hover:scale-110">
+                    <format.icon className="h-7 w-7" />
                   </div>
-                  <h4 className="text-lg font-semibold text-text-primary mb-2">{format.title}</h4>
-                  <p className="text-sm text-text-secondary mb-4">{format.description}</p>
-                  <ul className="space-y-2">
+                  <h4 className="text-xl sm:text-2xl font-bold text-text-primary mb-4">{format.title}</h4>
+                  <p className="text-sm text-text-secondary mb-5">{format.description}</p>
+                  <ul className="space-y-3">
                     {format.features.map((feature, i) => (
-                      <li key={i} className="flex items-center gap-2 text-sm text-text-secondary">
-                        <CheckCircle2 className="h-4 w-4 text-brand-primary shrink-0" />
+                      <li key={i} className="flex items-start gap-2.5 text-sm sm:text-base text-text-secondary">
+                        <CheckCircle2 className="h-5 w-5 text-brand-primary shrink-0 mt-0.5" />
                         {feature}
                       </li>
                     ))}
@@ -271,13 +264,53 @@ export default function BusyAPIPage() {
           </div>
         </section>
 
-        {/* Security & Infrastructure */}
+        {/* API Endpoints */}
         <section className="py-12 sm:py-16 md:py-20">
           <div className="px-4 sm:px-6 lg:px-8 max-w-[1200px] mx-auto">
             <div className="text-center mb-10 sm:mb-12">
               <div className="inline-flex items-center gap-2 rounded-full bg-brand-primary/10 border border-brand-primary/10 px-4 py-1.5 text-xs sm:text-sm font-medium text-brand-primary mb-4">
+                <Server className="h-3.5 w-3.5" />
+                API Endpoints
+              </div>
+              <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight text-text-primary mb-4">
+                Ready-to-Use Endpoints
+              </h2>
+              <p className="text-sm sm:text-base text-text-secondary max-w-2xl mx-auto">
+                Standard API endpoints available instantly after configuration
+              </p>
+            </div>
+
+            <div className="grid gap-4 sm:gap-5 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+              {endpoints.map((item, index) => (
+                <div 
+                  key={index}
+                  className="group rounded-xl border border-border/60 bg-white p-5 transition-all duration-300 hover:border-brand-primary/30 hover:shadow-lg"
+                >
+                  <div className="flex items-center gap-3 mb-3">
+                    <span className="px-2 py-1 text-xs font-bold text-green-600 bg-green-100 rounded">GET</span>
+                    <code className="text-sm font-mono text-text-primary">{item.path}</code>
+                  </div>
+                  <p className="text-sm text-text-secondary">{item.description}</p>
+                </div>
+              ))}
+            </div>
+
+            {/* Developer Note */}
+            <div className="mt-10 rounded-xl border border-brand-primary/20 bg-brand-primary/[0.03] p-5 max-w-2xl mx-auto">
+              <p className="text-sm text-text-secondary text-center">
+                <span className="font-medium text-text-primary">Developer Note:</span> All endpoints support filtering by date range, company, and party. Custom endpoints can be built for any data in your Busy database.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        {/* Security & Infrastructure */}
+        <section className="py-12 sm:py-16 md:py-20 bg-surface/50">
+          <div className="px-4 sm:px-6 lg:px-8 max-w-[1200px] mx-auto">
+            <div className="text-center mb-10 sm:mb-12">
+              <div className="inline-flex items-center gap-2 rounded-full bg-brand-primary/10 border border-brand-primary/10 px-4 py-1.5 text-xs sm:text-sm font-medium text-brand-primary mb-4">
                 <Shield className="h-3.5 w-3.5" />
-                Security
+                Security & Infrastructure
               </div>
               <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight text-text-primary mb-4">
                 Secure, Controlled, and Always Online
@@ -291,9 +324,9 @@ export default function BusyAPIPage() {
               {securityFeatures.map((item, i) => (
                 <div 
                   key={i}
-                  className="group rounded-xl border border-border/60 bg-white p-5 transition-all duration-300 hover:border-border hover:shadow-md"
+                  className="group rounded-xl border border-border/60 bg-white p-5 text-center transition-all duration-300 hover:border-border hover:shadow-md"
                 >
-                  <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-brand-primary/10 text-brand-primary mb-4 transition-transform duration-300 group-hover:scale-110">
+                  <div className="inline-flex h-11 w-11 items-center justify-center rounded-xl bg-brand-primary/10 text-brand-primary mb-4 transition-transform duration-300 group-hover:scale-110">
                     <item.icon className="h-5 w-5" />
                   </div>
                   <h4 className="text-sm font-semibold text-text-primary mb-2">{item.title}</h4>
@@ -305,7 +338,7 @@ export default function BusyAPIPage() {
         </section>
 
         {/* Integration Possibilities */}
-        <section className="py-12 sm:py-16 md:py-20 bg-surface/50">
+        <section className="py-12 sm:py-16 md:py-20">
           <div className="px-4 sm:px-6 lg:px-8 max-w-[1200px] mx-auto">
             <div className="text-center mb-10 sm:mb-12">
               <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight text-text-primary mb-4">
@@ -330,18 +363,11 @@ export default function BusyAPIPage() {
                 </div>
               ))}
             </div>
-
-            {/* Integration Note */}
-            <div className="mt-10 rounded-xl border border-brand-primary/20 bg-brand-primary/[0.03] p-5 max-w-2xl mx-auto">
-              <p className="text-sm text-text-secondary text-center">
-                <span className="font-medium text-text-primary">Developer Note:</span> We provide comprehensive API documentation, SDK examples, and dedicated technical support during integration. Your team won't be left guessing.
-              </p>
-            </div>
           </div>
         </section>
 
         {/* Setup & Onboarding */}
-        <section className="py-12 sm:py-16 md:py-20">
+        <section className="py-12 sm:py-16 md:py-20 bg-surface/50">
           <div className="px-4 sm:px-6 lg:px-8 max-w-[900px] mx-auto">
             <div className="text-center mb-10 sm:mb-12">
               <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight text-text-primary mb-4">
@@ -375,7 +401,7 @@ export default function BusyAPIPage() {
         </section>
 
         {/* FAQ Section */}
-        <section className="py-12 sm:py-16 md:py-20 bg-surface/50">
+        <section className="py-12 sm:py-16 md:py-20">
           <div className="px-4 sm:px-6 lg:px-8 max-w-[900px] mx-auto">
             <div className="text-center mb-10 sm:mb-12">
               <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight text-text-primary mb-4">
@@ -412,7 +438,7 @@ export default function BusyAPIPage() {
         </section>
 
         {/* Final CTA */}
-        <section className="py-14 sm:py-16 md:py-20 bg-slate-950">
+        <section className="py-14 sm:py-16 md:py-20 bg-surface/50">
           <div className="px-4 sm:px-6 lg:px-8 max-w-[1200px] mx-auto">
             <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-br from-brand-primary via-brand-primary to-brand-accent p-7 sm:p-8 md:p-12 lg:p-16 shadow-xl">
               
