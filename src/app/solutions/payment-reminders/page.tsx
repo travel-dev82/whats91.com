@@ -3,11 +3,11 @@
 import { Header } from "@/components/landing/Header";
 import { Footer } from "@/components/landing/Footer";
 import { ContactCard } from "@/components/landing/ContactCard";
+import { AnimatedPaymentReminder } from "@/components/landing/AnimatedPaymentReminder";
 import { Button } from "@/components/ui/button";
 import { 
   ChevronRight,
   Bell,
-  Filter,
   Users,
   CreditCard,
   Timer,
@@ -24,11 +24,8 @@ import {
   FileCheck,
   FileText,
   Calendar,
-  Target,
-  TrendingUp,
   ChevronDown,
   ChevronUp,
-  Settings,
   Layers
 } from "lucide-react";
 import { useState } from "react";
@@ -164,46 +161,8 @@ export default function PaymentRemindersPage() {
                 </div>
               </div>
 
-              {/* Right - Logic Engine Visual */}
-              <div className="relative">
-                <div className="rounded-2xl border border-border/60 bg-white p-6 sm:p-8 shadow-lg">
-                  <div className="flex items-center gap-3 mb-6">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-brand-primary/10 text-brand-primary">
-                      <Target className="h-6 w-6" />
-                    </div>
-                    <div>
-                      <h3 className="text-lg font-semibold text-text-primary">Logic Engine</h3>
-                      <p className="text-sm text-text-muted">Real-time validation sequence</p>
-                    </div>
-                  </div>
-                  
-                  <div className="space-y-3">
-                    {validationSteps.map((step, i) => (
-                      <div 
-                        key={step.step}
-                        className="flex items-center gap-3 p-3 rounded-xl bg-surface/50 border border-border/40"
-                      >
-                        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-brand-primary text-white text-sm font-bold shadow-md shadow-brand-primary/20">
-                          {step.step}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-text-primary truncate">{step.title}</p>
-                          <p className="text-xs text-text-muted truncate">{step.desc}</p>
-                        </div>
-                        {i < validationSteps.length - 1 && (
-                          <ChevronRight className="h-4 w-4 text-text-muted" />
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                  
-                  <div className="mt-6 p-3 rounded-xl bg-brand-primary/5 border border-brand-primary/10">
-                    <p className="text-xs text-center text-brand-primary font-medium">
-                      Only mathematically eligible customers receive alerts
-                    </p>
-                  </div>
-                </div>
-              </div>
+              {/* Right - Animated Payment Reminder Demo */}
+              <AnimatedPaymentReminder />
             </div>
           </div>
         </section>
