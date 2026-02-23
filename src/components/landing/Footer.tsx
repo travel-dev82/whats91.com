@@ -4,11 +4,12 @@ import Link from "next/link";
 import { MessageCircle, Mail, MapPin, Phone } from "lucide-react";
 
 const footerLinks = {
-  solutions: [
-    { label: "Marketing", href: "/solutions/marketing" },
+  busySolutions: [
     { label: "Busy ERP", href: "/solutions/busy-erp" },
-    { label: "Support", href: "/solutions/support" },
-    { label: "Developer APIs", href: "/solutions/developer" },
+    { label: "Busy API", href: "/solutions/busy-api" },
+    { label: "Busy Google Sheet", href: "/solutions/busy-google-sheet" },
+    { label: "Busy Reports", href: "/solutions/busy-reports" },
+    { label: "Busy Automation", href: "/solutions/payment-reminders" },
   ],
   developers: [
     { label: "API Docs", href: "/docs" },
@@ -68,11 +69,11 @@ export function Footer() {
           {/* Links Grid */}
           <div className="grid grid-cols-2 gap-8 sm:gap-10 lg:col-span-3 lg:grid-cols-3">
             
-            {/* Solutions */}
+            {/* Busy Solutions */}
             <div className="text-center sm:text-left">
-              <h4 className="text-xs sm:text-sm font-semibold text-text-primary mb-4">Solutions</h4>
+              <h4 className="text-xs sm:text-sm font-semibold text-text-primary mb-4">Busy Solutions</h4>
               <ul className="space-y-2.5">
-                {footerLinks.solutions.map((link) => (
+                {footerLinks.busySolutions.map((link) => (
                   <li key={link.label}>
                     <Link href={link.href} className="text-xs sm:text-sm text-text-secondary hover:text-brand-primary transition-colors">
                       {link.label}
