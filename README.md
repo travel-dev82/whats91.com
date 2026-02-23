@@ -60,6 +60,10 @@ This scaffold provides a robust foundation built with:
 # Install dependencies
 bun install
 
+# Configure environment
+cp .env.example .env
+# (optional) change PORT/HOST in .env
+
 # Start development server
 bun run dev
 
