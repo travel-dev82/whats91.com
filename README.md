@@ -129,6 +129,45 @@ This scaffold includes a comprehensive set of modern web development tools:
 - **Type Safety**: End-to-end TypeScript with Zod validation
 - **Essential Hooks**: 100+ useful React hooks with ReactUse for common patterns
 
+
+## 🔁 GitHub Auto-Deploy Webhook
+
+A secure webhook endpoint is available at `POST /api/webhooks/github` for pull/build/restart automation.
+
+### Behavior
+- Verifies `X-Hub-Signature-256` with `GITHUB_WEBHOOK_SECRET` (required).
+- Handles `ping` and `push` GitHub webhook events.
+- Can be scoped to one branch via `GITHUB_WEBHOOK_BRANCH` (if unset, any branch push is accepted).
+- Runs commands in order:
+  1. `git pull`
+  2. `bun install` (enabled by default)
+  3. `bun run build` (enabled by default)
+  4. `pm2 restart <process>` (defaults to `all`)
+
+### Environment variables
+
+```bash
+# required: used to verify X-Hub-Signature-256
+GITHUB_WEBHOOK_SECRET=your_webhook_secret
+
+# optional: if set, only pushes to this branch trigger deployment
+GITHUB_WEBHOOK_BRANCH=main
+
+# optional: path to the repository/app directory to run commands in
+GITHUB_WEBHOOK_PROJECT_PATH=C:/path/to/whats91.com
+
+# optional: PM2 process name, defaults to "all"
+PM2_PROCESS_NAME=whats91
+
+# optional toggles, defaults are true
+GITHUB_WEBHOOK_RUN_BUN_INSTALL=true
+GITHUB_WEBHOOK_RUN_BUN_BUILD=true
+```
+
+### Notes for Windows
+- Command execution uses Node.js `child_process.exec`, so standard globally available CLI tools (`git`, `bun`, `pm2`) must be available in PATH.
+- Keep this endpoint private and protected by the secret signature.
+
 ## 🤝 Get Started with Whats91.com
 
 1. **Clone this scaffold** to jumpstart your project
