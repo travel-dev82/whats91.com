@@ -3,7 +3,7 @@
 import { Header } from "@/components/landing/Header";
 import { Footer } from "@/components/landing/Footer";
 import { ContactCard } from "@/components/landing/ContactCard";
-import { AnimatedReverseFlow } from "@/components/landing/AnimatedReverseFlow";
+import { GoogleSheetAnimation } from "@/components/landing/GoogleSheetAnimation";
 import { Button } from "@/components/ui/button";
 import { 
   ChevronRight,
@@ -144,8 +144,8 @@ export default function BusyGoogleSheetPage() {
                 </div>
               </div>
 
-              {/* Right - Animated Reverse Flow Demo */}
-              <AnimatedReverseFlow />
+              {/* Right - Google Sheet Animation */}
+              <GoogleSheetAnimation />
             </div>
           </div>
         </section>
