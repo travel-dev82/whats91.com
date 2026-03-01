@@ -2,12 +2,10 @@
 
 /**
  * Deploy script for whats91.com
- * 
- * CRITICAL: This script MUST be run with cwd set to project root
- * All paths are resolved relative to projectPath
+ * Uses spawn for better control over child processes
  */
 
-const { execSync } = require("child_process");
+const { spawn } = require("child_process");
 const fs = require("fs");
 const path = require("path");
 
@@ -20,12 +18,10 @@ const CONFIG = {
   delayMs: 5000,
   pm2RestartCmd: "pm2 restart all",
 
-  // Copy these folders/files from temp into production
   copyFolders: ["src", "prisma", "scripts", "public"],
   copyFiles: [
     "package.json",
     "package-lock.json",
-    // optional configs
     "postcss.config.js",
     "postcss.config.cjs",
     "postcss.config.mjs",
@@ -39,7 +35,7 @@ const CONFIG = {
   ],
 };
 
-// ====== Pretty logs ======
+// ====== Logging ======
 const colors = {
   reset: "\x1b[0m",
   bright: "\x1b[1m",
@@ -67,26 +63,46 @@ function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+/**
+ * Run a command using spawn with full control
+ */
+function runCommand(command, args, cwd, opts = {}) {
+  return new Promise((resolve, reject) => {
+    log(`Running: ${command} ${args.join(" ")}`, "cyan");
+    log(`  CWD: ${cwd}`, "magenta");
+    
+    const childEnv = { ...process.env };
+    delete childEnv.NODE_ENV;
+    
+    const child = spawn(command, args, {
+      cwd,
+      stdio: "inherit",
+      env: childEnv,
+      shell: true,
+    });
+    
+    child.on("error", (error) => {
+      log(`Process error: ${error.message}`, "red");
+      reject(error);
+    });
+    
+    child.on("exit", (code, signal) => {
+      if (code === 0) {
+        resolve({ code, signal });
+      } else {
+        const error = new Error(`Command failed with code ${code}, signal ${signal}`);
+        error.code = code;
+        reject(error);
+      }
+    });
+  });
+}
+
 function ensureDir(dir) {
   if (!fs.existsSync(dir)) {
     fs.mkdirSync(dir, { recursive: true });
     log(`Created directory: ${dir}`, "yellow");
   }
-}
-
-function run(command, cwd, opts = {}) {
-  log(`Running: ${command}`, "cyan");
-  log(`  CWD: ${cwd}`, "magenta");
-
-  const env = { ...process.env, ...(opts.env || {}) };
-  delete env.NODE_ENV; // Let npm handle NODE_ENV
-
-  execSync(command, {
-    cwd,
-    stdio: "inherit",
-    env,
-    timeout: opts.timeout ?? 0,
-  });
 }
 
 function assertNoNodeModulesPaths(p) {
@@ -126,9 +142,10 @@ function clearCacheFolders() {
   log("Clearing all cache folders...", "yellow");
   
   const cachePaths = [
-    ".next",                          // Next.js build cache
-    "node_modules/.cache",            // General npm cache
-    "node_modules/.prisma",           // Prisma generated client cache
+    ".next",
+    "node_modules/.cache",
+    "node_modules/.prisma",
+    "node_modules/@prisma/client",
   ];
 
   for (const relPath of cachePaths) {
@@ -156,6 +173,7 @@ async function deploy() {
   log(`  Node Version: ${process.version}`, "magenta");
   log(`  USER: ${process.env.USER || 'not set'}`, "magenta");
   log(`  HOME: ${process.env.HOME || 'not set'}`, "magenta");
+  log(`  PATH: ${process.env.PATH?.substring(0, 100)}...`, "magenta");
   
   // Verify project path exists
   if (!fs.existsSync(CONFIG.projectPath)) {
@@ -170,17 +188,16 @@ async function deploy() {
     const tempGitDir = path.join(CONFIG.tempPath, ".git");
     if (!fs.existsSync(tempGitDir)) {
       log("Temp folder is not a git repo. Initializing...", "cyan");
-      run("git init", CONFIG.tempPath);
-      run(`git remote add origin ${CONFIG.repoUrl}`, CONFIG.tempPath);
+      await runCommand("git", ["init"], CONFIG.tempPath);
+      await runCommand("git", ["remote", "add", "origin", CONFIG.repoUrl], CONFIG.tempPath);
     }
 
-    run(`git remote set-url origin ${CONFIG.repoUrl}`, CONFIG.tempPath);
-    run(`git fetch origin ${CONFIG.branch}`, CONFIG.tempPath);
-    run(`git reset --hard origin/${CONFIG.branch}`, CONFIG.tempPath);
+    await runCommand("git", ["remote", "set-url", "origin", CONFIG.repoUrl], CONFIG.tempPath);
+    await runCommand("git", ["fetch", "origin", CONFIG.branch], CONFIG.tempPath);
+    await runCommand("git", ["reset", "--hard", `origin/${CONFIG.branch}`], CONFIG.tempPath);
 
-    // Log what we pulled
     log("Latest commit in temp:", "cyan");
-    run(`git log -1 --oneline`, CONFIG.tempPath);
+    await runCommand("git", ["log", "-1", "--oneline"], CONFIG.tempPath);
 
     log(`Waiting ${CONFIG.delayMs / 1000}s...`, "cyan");
     await sleep(CONFIG.delayMs);
@@ -217,7 +234,7 @@ async function deploy() {
     // STEP 4: npm install
     logSection("STEP 4: npm install");
     const installStart = Date.now();
-    run("npm install", CONFIG.projectPath);
+    await runCommand("npm", ["install"], CONFIG.projectPath);
     const installSecs = ((Date.now() - installStart) / 1000).toFixed(2);
     log(`npm install completed in ${installSecs}s`, "green");
 
@@ -227,13 +244,13 @@ async function deploy() {
     // STEP 5: Build
     logSection("STEP 5: npm run build");
     const buildStart = Date.now();
-    run("npm run build", CONFIG.projectPath, { timeout: 600000 });
+    await runCommand("npm", ["run", "build"], CONFIG.projectPath);
     const buildSecs = ((Date.now() - buildStart) / 1000).toFixed(2);
     log(`Build completed in ${buildSecs}s`, "green");
 
     // STEP 6: Restart PM2
     logSection("STEP 6: pm2 restart");
-    run(CONFIG.pm2RestartCmd, CONFIG.projectPath);
+    await runCommand(CONFIG.pm2RestartCmd, [], CONFIG.projectPath);
 
     const totalSecs = ((Date.now() - start) / 1000).toFixed(2);
     logSection("DEPLOYMENT SUCCESSFUL");
@@ -244,7 +261,9 @@ async function deploy() {
     const totalSecs = ((Date.now() - start) / 1000).toFixed(2);
     logSection("DEPLOYMENT FAILED");
     log(`Error: ${err.message}`, "red");
-    log(`Stack: ${err.stack}`, "red");
+    if (err.stack) {
+      log(`Stack: ${err.stack}`, "red");
+    }
     log(`Total time: ${totalSecs}s`, "red");
     
     process.exit(1);
