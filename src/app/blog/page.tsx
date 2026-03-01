@@ -17,6 +17,8 @@ import {
 } from "lucide-react";
 import { getAllPosts, getAllCategories, getAllTags } from "@/lib/blog/registry";
 import { BlogCard } from "@/components/blog/BlogCard";
+import { Header } from "@/components/landing/Header";
+import { Footer } from "@/components/landing/Footer";
 
 // Tech stats for the hero
 const techStats = [
@@ -62,6 +64,7 @@ export default function BlogPage() {
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
+      <Header />
       <main className="flex-1">
         
         {/* Modern Hero Section */}
@@ -320,6 +323,7 @@ export default function BlogPage() {
           </div>
         </section>
       </main>
+      <Footer />
     </div>
   );
 }
