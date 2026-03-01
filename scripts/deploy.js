@@ -208,6 +208,16 @@ log(`[STEP 3] npm install END (took ${installSecs}s)`, "yellow");
     log(`Waiting ${CONFIG.delayMs / 1000}s...`, "cyan");
     await sleep(CONFIG.delayMs);
 
+    // STEP 3.2: Clear .next cache before build
+    log("[STEP 3.2] Clear .next cache before build", "yellow");
+    const nextCachePath = path.join(CONFIG.projectPath, ".next");
+    if (fs.existsSync(nextCachePath)) {
+      fs.rmSync(nextCachePath, { recursive: true, force: true });
+      log("Cleared .next cache", "green");
+    } else {
+      log(".next folder not found, skipping clear", "cyan");
+    }
+
     // STEP 4: build
     log("[STEP 4] npm run build START", "yellow");
     const buildStart = Date.now();
