@@ -49,6 +49,7 @@ const footerLinks = {
   legal: [
     { label: "Privacy Policy", href: "/privacy" },
     { label: "Terms of Service", href: "/terms" },
+    { label: "Refund Policy", href: "/refund" },
     { label: "DPDP Compliance", href: "/compliance" },
     { label: "Cookie Policy", href: "/cookies" },
   ],
