@@ -1,19 +1,20 @@
-import { exec } from "node:child_process";
+import { spawn } from "node:child_process";
 import { NextResponse } from "next/server";
 import { join } from "node:path";
-import { existsSync } from "node:fs";
+import { existsSync, openSync, writeFileSync, closeSync } from "node:fs";
 
 export const runtime = "nodejs";
 
 /**
- * Trigger the deployment script using exec with ABSOLUTE path
+ * Trigger the deployment script using a completely detached process
+ * This ensures no environment pollution from the parent Next.js process
  */
 function triggerDeployment(projectPath: string): void {
   console.log("[github-webhook] Triggering deployment script...");
   console.log(`[github-webhook] Project path: ${projectPath}`);
   console.log(`[github-webhook] Current working directory: ${process.cwd()}`);
   
-  // Use ABSOLUTE path to the deploy script - CRITICAL FIX
+  // Use ABSOLUTE path to the deploy script
   const deployScript = join(projectPath, "scripts", "deploy.js");
   
   // Check if deploy script exists
@@ -24,38 +25,57 @@ function triggerDeployment(projectPath: string): void {
   
   console.log(`[github-webhook] Deploy script: ${deployScript}`);
   
-  // Use ABSOLUTE path to node and deploy script
-  // CRITICAL: Don't rely on cwd, use absolute paths
-  const child = exec(
-    `node "${deployScript}"`,  // Use ABSOLUTE path
-    {
-      cwd: projectPath,
-      env: {
-        ...process.env,
-        GITHUB_WEBHOOK_PROJECT_PATH: projectPath,
-      },
-    },
-    (error, stdout, stderr) => {
-      if (error) {
-        console.error(`[github-webhook] Deploy error: ${error.message}`);
-        return;
-      }
-      if (stdout) {
-        console.log(`[github-webhook] Deploy stdout:\n${stdout}`);
-      }
-      if (stderr) {
-        console.error(`[github-webhook] Deploy stderr:\n${stderr}`);
-      }
-    }
-  );
+  // Create a wrapper script that will run in a clean environment
+  const wrapperScript = join(projectPath, "scripts", "deploy-trigger.sh");
+  const logFile = join(projectPath, "deploy.log");
   
-  if (child) {
-    child.on("error", (err) => {
-      console.error(`[github-webhook] Spawn error: ${err.message}`);
-    });
-    
-    console.log(`[github-webhook] Deploy process started with PID: ${child.pid}`);
+  // Write a wrapper script that sets up a clean environment
+  const wrapperContent = `#!/bin/bash
+# Deployment trigger wrapper
+# This runs in a clean shell environment
+
+cd "${projectPath}"
+export GITHUB_WEBHOOK_PROJECT_PATH="${projectPath}"
+export HOME="${process.env.HOME}"
+export USER="${process.env.USER}"
+export PATH="${process.env.PATH}"
+
+# Run the deploy script
+node "${deployScript}" >> "${logFile}" 2>&1
+`;
+  
+  try {
+    writeFileSync(wrapperScript, wrapperContent, { mode: 0o755 });
+    console.log(`[github-webhook] Created wrapper script: ${wrapperScript}`);
+  } catch (err) {
+    console.error(`[github-webhook] Failed to create wrapper script:`, err);
+    return;
   }
+  
+  // Use spawn with completely detached process
+  // This runs in a completely separate process group
+  const child = spawn("/bin/bash", [wrapperScript], {
+    detached: true,        // Completely detach from parent
+    stdio: "ignore",       // Ignore all stdio
+    cwd: projectPath,
+    env: {
+      // Clean minimal environment
+      HOME: process.env.HOME,
+      USER: process.env.USER,
+      PATH: process.env.PATH,
+      GITHUB_WEBHOOK_PROJECT_PATH: projectPath,
+    },
+  });
+  
+  // Completely unref so parent can exit without waiting
+  child.unref();
+  
+  child.on("error", (err) => {
+    console.error(`[github-webhook] Spawn error: ${err.message}`);
+  });
+  
+  console.log(`[github-webhook] Deploy process spawned with PID: ${child.pid}`);
+  console.log(`[github-webhook] Logs will be written to: ${logFile}`);
 }
 
 /**
@@ -63,9 +83,8 @@ function triggerDeployment(projectPath: string): void {
  */
 export async function POST() {
   console.log("[github-webhook] Received webhook request");
-  console.log(`[github-webhook] Environment GITHUB_WEBHOOK_PROJECT_PATH: ${process.env.GITHUB_WEBHOOK_PROJECT_PATH}`);
   
-  const projectPath = process.env.GITHUB_WEBHOOK_PROJECT_PATH ?? process.cwd();
+  const projectPath = process.env.GITHUB_WEBHOOK_PROJECT_PATH ?? "/home/whats91/htdocs/whats91.com";
   
   // Trigger the deployment script
   triggerDeployment(projectPath);
@@ -75,7 +94,7 @@ export async function POST() {
     ok: true,
     message: "Deployment triggered successfully",
     projectPath,
-    note: "Deployment script running in background",
+    note: "Deployment script running in background. Check deploy.log for progress.",
   });
 }
 
@@ -87,6 +106,6 @@ export async function GET() {
     ok: true,
     message: "GitHub webhook endpoint is active",
     timestamp: new Date().toISOString(),
-    projectPath: process.env.GITHUB_WEBHOOK_PROJECT_PATH ?? process.cwd(),
+    projectPath: process.env.GITHUB_WEBHOOK_PROJECT_PATH ?? "/home/whats91/htdocs/whats91.com",
   });
 }

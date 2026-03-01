@@ -2,7 +2,7 @@
 
 /**
  * Deploy script for whats91.com
- * Uses spawn for better control over child processes
+ * Uses spawn with completely isolated environment
  */
 
 const { spawn } = require("child_process");
@@ -64,20 +64,37 @@ function sleep(ms) {
 }
 
 /**
- * Run a command using spawn with full control
+ * Run a command with CLEAN environment
+ * CRITICAL: Explicitly set PATH and HOME to ensure npm/node work correctly
  */
-function runCommand(command, args, cwd, opts = {}) {
+function runCommand(command, args, cwd) {
   return new Promise((resolve, reject) => {
     log(`Running: ${command} ${args.join(" ")}`, "cyan");
     log(`  CWD: ${cwd}`, "magenta");
     
-    const childEnv = { ...process.env };
-    delete childEnv.NODE_ENV;
+    // Build a CLEAN environment - don't inherit potentially polluted vars
+    const cleanEnv = {
+      HOME: process.env.HOME || "/home/whats91",
+      USER: process.env.USER || "whats91",
+      PATH: process.env.PATH,
+      NODE_PATH: process.env.NODE_PATH,
+      NVM_DIR: process.env.NVM_DIR,
+      NVM_INC: process.env.NVM_INC,
+      GITHUB_WEBHOOK_PROJECT_PATH: CONFIG.projectPath,
+    };
+    
+    // Add NVM path if available
+    if (process.env.NVM_DIR) {
+      cleanEnv.PATH = `${process.env.NVM_DIR}/versions/node/v20.19.0/bin:${cleanEnv.PATH}`;
+    }
+    
+    log(`  PATH: ${cleanEnv.PATH?.substring(0, 100)}...`, "magenta");
+    log(`  HOME: ${cleanEnv.HOME}`, "magenta");
     
     const child = spawn(command, args, {
       cwd,
       stdio: "inherit",
-      env: childEnv,
+      env: cleanEnv,
       shell: true,
     });
     
@@ -105,16 +122,10 @@ function ensureDir(dir) {
   }
 }
 
-function assertNoNodeModulesPaths(p) {
-  const normalized = String(p || "").replace(/\\/g, "/");
-  if (normalized.includes("/node_modules") || normalized.includes("node_modules/") || normalized.endsWith("node_modules")) {
-    throw new Error(`Safety stop: node_modules path detected: ${p}`);
-  }
-}
-
 function copyFolderClean(src, dest) {
-  assertNoNodeModulesPaths(src);
-  assertNoNodeModulesPaths(dest);
+  if (src.includes("node_modules") || dest.includes("node_modules")) {
+    throw new Error(`Safety: node_modules path detected`);
+  }
 
   if (!fs.existsSync(src)) {
     throw new Error(`Source folder not found: ${src}`);
@@ -129,9 +140,9 @@ function copyFolderClean(src, dest) {
 }
 
 function copyFileIfExists(src, dest) {
-  assertNoNodeModulesPaths(src);
-  assertNoNodeModulesPaths(dest);
-
+  if (src.includes("node_modules") || dest.includes("node_modules")) {
+    return false;
+  }
   if (!fs.existsSync(src)) return false;
   fs.copyFileSync(src, dest);
   log(`Copied file: ${path.basename(src)}`, "green");
@@ -195,8 +206,6 @@ async function deploy() {
     await runCommand("git", ["remote", "set-url", "origin", CONFIG.repoUrl], CONFIG.tempPath);
     await runCommand("git", ["fetch", "origin", CONFIG.branch], CONFIG.tempPath);
     await runCommand("git", ["reset", "--hard", `origin/${CONFIG.branch}`], CONFIG.tempPath);
-
-    log("Latest commit in temp:", "cyan");
     await runCommand("git", ["log", "-1", "--oneline"], CONFIG.tempPath);
 
     log(`Waiting ${CONFIG.delayMs / 1000}s...`, "cyan");
