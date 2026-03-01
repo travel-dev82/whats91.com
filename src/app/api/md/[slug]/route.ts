@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getAllPosts, getPostBySlug } from "@/lib/blog";
+import { getPostBySlug } from "@/lib/blog";
 import { siteConfig } from "@/lib/seo/config";
 
 // Markdown twin generator for LLM consumption
@@ -396,21 +396,5 @@ export async function GET(
   });
 }
 
-// Generate list of all available markdown twins
-export async function generateStaticParams() {
-  const blogPosts = getAllPosts();
-  const staticSlugs = [
-    "busy-erp",
-    "whatsapp-templates",
-    "whatsapp-coexistence",
-    "tools",
-    "pricing",
-  ];
-
-  const params = [
-    ...staticSlugs.map((slug) => ({ slug })),
-    ...blogPosts.map((post) => ({ slug: `blog-${post.slug}` })),
-  ];
-
-  return params;
-}
+// Note: generateStaticParams is not supported in API routes
+// This route handles dynamic requests at runtime

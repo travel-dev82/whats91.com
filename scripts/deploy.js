@@ -38,7 +38,7 @@ const CONFIG = {
   preserveFiles: ['.env', 'db/custom.db'],
   
   // Files to copy from temp root
-  copyFiles: ['package.json', 'package-lock.json', 'bun.lockb', 'next.config.ts', 'tsconfig.json', 'tailwind.config.ts', 'postcss.config.mjs', 'components.json', 'ecosystem.config.cjs'],
+  copyFiles: ['package.json', 'package-lock.json', 'next.config.ts', 'tsconfig.json', 'tailwind.config.ts', 'postcss.config.mjs', 'components.json', 'ecosystem.config.cjs'],
 };
 
 // Colors for console output
@@ -177,8 +177,8 @@ async function deploy() {
     log(`Waiting ${CONFIG.delayMs / 1000} seconds...`, 'cyan');
     await sleep(CONFIG.delayMs);
     
-    // Step 4: Clean and install dependencies
-    log('\n[STEP 4] Installing dependencies...', 'yellow');
+    // Step 4: Clean caches and reinstall
+    log('\n[STEP 4] Cleaning caches and reinstalling dependencies...', 'yellow');
     
     // Clear Next.js cache
     const nextCachePath = path.join(CONFIG.projectPath, '.next');
@@ -190,11 +190,25 @@ async function deploy() {
     // Clear node_modules/.cache if exists
     const cachePath = path.join(CONFIG.projectPath, 'node_modules', '.cache');
     if (fs.existsSync(cachePath)) {
-      log('Clearing node_modules cache...', 'cyan');
+      log('Clearing node_modules/.cache...', 'cyan');
       fs.rmSync(cachePath, { recursive: true, force: true });
     }
     
-    runCommand('npm install', CONFIG.projectPath);
+    // Delete .prisma client cache
+    const prismaClientPath = path.join(CONFIG.projectPath, 'node_modules', '.prisma');
+    if (fs.existsSync(prismaClientPath)) {
+      log('Clearing .prisma cache...', 'cyan');
+      fs.rmSync(prismaClientPath, { recursive: true, force: true });
+    }
+    
+    const prismaClientPath2 = path.join(CONFIG.projectPath, 'node_modules', '@prisma', 'client');
+    if (fs.existsSync(prismaClientPath2)) {
+      log('Clearing @prisma/client cache...', 'cyan');
+      fs.rmSync(prismaClientPath2, { recursive: true, force: true });
+    }
+    
+    // Run clean install
+    runCommand('npm ci --legacy-peer-deps', CONFIG.projectPath);
     
     log(`Waiting ${CONFIG.delayMs / 1000} seconds...`, 'cyan');
     await sleep(CONFIG.delayMs);
