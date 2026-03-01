@@ -56,6 +56,7 @@ const CONFIG = {
   branch: process.env.GITHUB_WEBHOOK_BRANCH || "main",
   delayMs: 5000,
   pm2RestartCmd: "pm2 restart all",
+  lockFile: "/home/whats91/htdocs/whats91.com/.deploy.lock",
 
   // Bot Master Sender API config for notifications
   botMaster: {
@@ -109,6 +110,39 @@ function logSection(title) {
 
 function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+/**
+ * Deployment lock functions to prevent concurrent deployments
+ */
+function acquireLock() {
+  if (fs.existsSync(CONFIG.lockFile)) {
+    const lockData = JSON.parse(fs.readFileSync(CONFIG.lockFile, 'utf-8'));
+    const lockAge = Date.now() - new Date(lockData.timestamp).getTime();
+    
+    // If lock is older than 30 minutes, it's stale - remove it
+    if (lockAge > 30 * 60 * 1000) {
+      log("Found stale lock file (older than 30 min), removing...", "yellow");
+      fs.unlinkSync(CONFIG.lockFile);
+    } else {
+      return false;
+    }
+  }
+  
+  // Create lock file
+  fs.writeFileSync(CONFIG.lockFile, JSON.stringify({
+    pid: process.pid,
+    timestamp: new Date().toISOString(),
+  }));
+  log(`Lock acquired: ${CONFIG.lockFile}`, "green");
+  return true;
+}
+
+function releaseLock() {
+  if (fs.existsSync(CONFIG.lockFile)) {
+    fs.unlinkSync(CONFIG.lockFile);
+    log("Lock released", "green");
+  }
 }
 
 /**
@@ -362,6 +396,18 @@ ${data.error.substring(0, 500)}${data.error.length > 500 ? "..." : ""}
 async function deploy() {
   const start = Date.now();
   
+  // Try to acquire deployment lock
+  if (!acquireLock()) {
+    logSection("DEPLOYMENT SKIPPED");
+    log("Another deployment is already in progress. Exiting.", "yellow");
+    process.exit(0);
+  }
+  
+  // Ensure lock is released on exit
+  process.on('exit', releaseLock);
+  process.on('SIGINT', () => { releaseLock(); process.exit(0); });
+  process.on('SIGTERM', () => { releaseLock(); process.exit(0); });
+  
   logSection("DEPLOYMENT STARTING");
   
   // Log environment info
@@ -377,6 +423,7 @@ async function deploy() {
   
   // Verify project path exists
   if (!fs.existsSync(CONFIG.projectPath)) {
+    releaseLock();
     throw new Error(`Project path does not exist: ${CONFIG.projectPath}`);
   }
 

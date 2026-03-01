@@ -1,9 +1,42 @@
 import { spawn } from "node:child_process";
 import { NextResponse } from "next/server";
 import { join } from "node:path";
-import { existsSync, openSync, writeFileSync, closeSync } from "node:fs";
+import { existsSync, openSync, writeFileSync, closeSync, unlinkSync } from "node:fs";
 
 export const runtime = "nodejs";
+
+// Branch to listen for deployments
+const DEPLOY_BRANCH = process.env.GITHUB_WEBHOOK_BRANCH || "main";
+
+/**
+ * Extract payload from GitHub webhook request
+ * GitHub sends URL-encoded form data, not raw JSON
+ */
+async function extractPayload(request: Request): Promise<{
+  branch?: string;
+  ref?: string;
+  repository?: string;
+  pushed_at?: number;
+} | null> {
+  try {
+    const contentType = request.headers.get("content-type") || "";
+    
+    if (contentType.includes("application/x-www-form-urlencoded")) {
+      const formData = await request.formData();
+      const payloadStr = formData.get("payload");
+      if (payloadStr && typeof payloadStr === "string") {
+        return JSON.parse(payloadStr);
+      }
+    } else if (contentType.includes("application/json")) {
+      return await request.json();
+    }
+    
+    return null;
+  } catch (err) {
+    console.error("[github-webhook] Error extracting payload:", err);
+    return null;
+  }
+}
 
 /**
  * Trigger the deployment script using a completely detached process
@@ -79,10 +112,34 @@ node "${deployScript}" >> "${logFile}" 2>&1
 }
 
 /**
- * POST handler - Triggers deployment on any request
+ * POST handler - Triggers deployment on push to configured branch
  */
-export async function POST() {
+export async function POST(request: Request) {
   console.log("[github-webhook] Received webhook request");
+  
+  // Extract payload to check branch
+  const payload = await extractPayload(request);
+  
+  if (payload) {
+    const ref = payload.ref || "";
+    const branch = ref.replace("refs/heads/", "");
+    
+    console.log(`[github-webhook] Push to branch: ${branch}`);
+    console.log(`[github-webhook] Configured deploy branch: ${DEPLOY_BRANCH}`);
+    
+    // Only deploy for the configured branch
+    if (branch !== DEPLOY_BRANCH) {
+      console.log(`[github-webhook] Skipping deployment - branch '${branch}' does not match '${DEPLOY_BRANCH}'`);
+      return NextResponse.json({
+        ok: true,
+        message: `Skipped deployment - branch '${branch}' does not match configured branch '${DEPLOY_BRANCH}'`,
+        branch,
+        configuredBranch: DEPLOY_BRANCH,
+      });
+    }
+  } else {
+    console.log("[github-webhook] Could not extract payload, proceeding with deployment anyway");
+  }
   
   const projectPath = process.env.GITHUB_WEBHOOK_PROJECT_PATH ?? "/home/whats91/htdocs/whats91.com";
   
@@ -94,6 +151,7 @@ export async function POST() {
     ok: true,
     message: "Deployment triggered successfully",
     projectPath,
+    branch: DEPLOY_BRANCH,
     note: "Deployment script running in background. Check deploy.log for progress.",
   });
 }
