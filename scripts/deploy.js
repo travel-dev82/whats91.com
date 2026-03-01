@@ -14,23 +14,35 @@ const https = require("https");
 
 // Load .env file at the very beginning
 function loadEnvFile() {
-  const envPath = path.join(__dirname, '..', '.env');
-  if (fs.existsSync(envPath)) {
-    const envContent = fs.readFileSync(envPath, 'utf-8');
-    envContent.split('\n').forEach(line => {
-      const trimmed = line.trim();
-      if (trimmed && !trimmed.startsWith('#')) {
-        const [key, ...valueParts] = trimmed.split('=');
-        if (key && valueParts.length > 0) {
-          const value = valueParts.join('=').trim().replace(/^["']|["']$/g, '');
-          // Only set if not already defined
-          if (!process.env[key.trim()]) {
-            process.env[key.trim()] = value;
+  // Try multiple paths for .env file
+  const possiblePaths = [
+    path.join(__dirname, '..', '.env'),        // scripts/../.env
+    path.join(process.cwd(), '.env'),          // CWD/.env
+    '/home/whats91/htdocs/whats91.com/.env',   // Absolute path
+  ];
+  
+  for (const envPath of possiblePaths) {
+    if (fs.existsSync(envPath)) {
+      console.log(`[deploy] Loading .env from: ${envPath}`);
+      const envContent = fs.readFileSync(envPath, 'utf-8');
+      envContent.split('\n').forEach(line => {
+        const trimmed = line.trim();
+        if (trimmed && !trimmed.startsWith('#')) {
+          const [key, ...valueParts] = trimmed.split('=');
+          if (key && valueParts.length > 0) {
+            const value = valueParts.join('=').trim().replace(/^["']|["']$/g, '');
+            // Only set if not already defined
+            if (!process.env[key.trim()]) {
+              process.env[key.trim()] = value;
+            }
           }
         }
-      }
-    });
+      });
+      console.log(`[deploy] Loaded env vars, BOT_MASTER_AUTH_TOKEN=${process.env.BOT_MASTER_AUTH_TOKEN ? 'SET' : 'NOT SET'}`);
+      return; // Successfully loaded, exit
+    }
   }
+  console.log("[deploy] Warning: .env file not found in any location");
 }
 
 // Load env before config
@@ -428,13 +440,18 @@ async function deploy() {
     logSection("STEP 6: pm2 restart");
     await runCommand(CONFIG.pm2RestartCmd, [], CONFIG.projectPath);
 
+    // Small delay to ensure PM2 restart completes
+    await sleep(2000);
+
     const totalSecs = ((Date.now() - start) / 1000).toFixed(2);
     logSection("DEPLOYMENT SUCCESSFUL");
     log(`Total time: ${totalSecs}s`, "green");
     
     // Send success notification
+    log("Sending deployment notification...", "cyan");
     await sendDeploymentNotification("success", { duration: totalSecs });
     
+    log("Deployment complete, exiting...", "green");
     process.exit(0);
   } catch (err) {
     const totalSecs = ((Date.now() - start) / 1000).toFixed(2);
@@ -446,11 +463,13 @@ async function deploy() {
     log(`Total time: ${totalSecs}s`, "red");
     
     // Send failure notification
+    log("Sending failure notification...", "cyan");
     await sendDeploymentNotification("failed", { 
       error: err.message,
       duration: totalSecs 
     });
     
+    log("Deployment failed, exiting...", "red");
     process.exit(1);
   }
 }
