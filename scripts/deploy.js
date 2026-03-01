@@ -12,6 +12,30 @@ const fs = require("fs");
 const path = require("path");
 const https = require("https");
 
+// Load .env file at the very beginning
+function loadEnvFile() {
+  const envPath = path.join(__dirname, '..', '.env');
+  if (fs.existsSync(envPath)) {
+    const envContent = fs.readFileSync(envPath, 'utf-8');
+    envContent.split('\n').forEach(line => {
+      const trimmed = line.trim();
+      if (trimmed && !trimmed.startsWith('#')) {
+        const [key, ...valueParts] = trimmed.split('=');
+        if (key && valueParts.length > 0) {
+          const value = valueParts.join('=').trim().replace(/^["']|["']$/g, '');
+          // Only set if not already defined
+          if (!process.env[key.trim()]) {
+            process.env[key.trim()] = value;
+          }
+        }
+      }
+    });
+  }
+}
+
+// Load env before config
+loadEnvFile();
+
 // ====== CONFIG ======
 const CONFIG = {
   projectPath: process.env.GITHUB_WEBHOOK_PROJECT_PATH || "/home/whats91/htdocs/whats91.com",
@@ -219,6 +243,10 @@ function getGitInfo() {
  */
 async function sendDeploymentNotification(status, data) {
   const { botMaster } = CONFIG;
+  
+  // Debug: Log if auth token exists (masked)
+  const tokenStatus = botMaster.authToken ? `set (${botMaster.authToken.substring(0, 8)}...)` : 'NOT SET';
+  log(`Bot Master config: senderId=${botMaster.senderId}, receiverId=${botMaster.receiverId}, authToken=${tokenStatus}`, "cyan");
   
   if (!botMaster.authToken) {
     log("Bot Master auth token not configured, skipping notification", "yellow");
