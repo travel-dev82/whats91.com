@@ -6,13 +6,14 @@ import { existsSync } from "node:fs";
 export const runtime = "nodejs";
 
 /**
- * Trigger the deployment script using exec with explicit cwd
+ * Trigger the deployment script using exec with ABSOLUTE path
  */
 function triggerDeployment(projectPath: string): void {
   console.log("[github-webhook] Triggering deployment script...");
   console.log(`[github-webhook] Project path: ${projectPath}`);
   console.log(`[github-webhook] Current working directory: ${process.cwd()}`);
   
+  // Use ABSOLUTE path to the deploy script - CRITICAL FIX
   const deployScript = join(projectPath, "scripts", "deploy.js");
   
   // Check if deploy script exists
@@ -23,11 +24,12 @@ function triggerDeployment(projectPath: string): void {
   
   console.log(`[github-webhook] Deploy script: ${deployScript}`);
   
-  // Use exec with explicit cwd - same as manual run
+  // Use ABSOLUTE path to node and deploy script
+  // CRITICAL: Don't rely on cwd, use absolute paths
   const child = exec(
-    "node scripts/deploy.js",
+    `node "${deployScript}"`,  // Use ABSOLUTE path
     {
-      cwd: projectPath,  // Explicitly set working directory - CRITICAL
+      cwd: projectPath,
       env: {
         ...process.env,
         GITHUB_WEBHOOK_PROJECT_PATH: projectPath,
@@ -47,7 +49,6 @@ function triggerDeployment(projectPath: string): void {
     }
   );
   
-  // Disconnect from parent so it continues after response
   if (child) {
     child.on("error", (err) => {
       console.error(`[github-webhook] Spawn error: ${err.message}`);
