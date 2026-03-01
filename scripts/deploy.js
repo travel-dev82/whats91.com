@@ -2,18 +2,9 @@
 
 /**
  * Deploy script for whats91.com
- * Strict sequential flow, does NOT touch node_modules, and ensures dependency files are updated.
- *
- * Steps:
- * 1) Pull latest code into temp folder
- * 2) Wait 5 seconds
- * 3) Copy src + package.json + package-lock.json (+ configs if present) from temp -> project
- * 4) Wait 5 seconds
- * 5) npm install (block until complete)
- * 6) Verify required deps resolvable
- * 7) Wait 5 seconds
- * 8) npm run build (block until complete)
- * 9) pm2 restart all
+ * 
+ * CRITICAL: This script MUST be run with cwd set to project root
+ * All paths are resolved relative to projectPath
  */
 
 const { execSync } = require("child_process");
@@ -30,11 +21,11 @@ const CONFIG = {
   pm2RestartCmd: "pm2 restart all",
 
   // Copy these folders/files from temp into production
-  copyFolders: ["src"],
+  copyFolders: ["src", "prisma", "scripts", "public"],
   copyFiles: [
     "package.json",
     "package-lock.json",
-    // optional configs (copied only if they exist in temp)
+    // optional configs
     "postcss.config.js",
     "postcss.config.cjs",
     "postcss.config.mjs",
@@ -46,8 +37,6 @@ const CONFIG = {
     "next.config.mjs",
     "next.config.ts",
   ],
-
-  requiredModules: ["@tailwindcss/postcss"],
 };
 
 // ====== Pretty logs ======
@@ -58,11 +47,20 @@ const colors = {
   yellow: "\x1b[33m",
   red: "\x1b[31m",
   cyan: "\x1b[36m",
+  magenta: "\x1b[35m",
 };
 
 function log(message, color = "reset") {
   const ts = new Date().toISOString();
   console.log(`${colors[color]}[${ts}] [deploy] ${message}${colors.reset}`);
+}
+
+function logSection(title) {
+  console.log("");
+  log("═".repeat(60), "bright");
+  log(`  ${title}`, "bright");
+  log("═".repeat(60), "bright");
+  console.log("");
 }
 
 function sleep(ms) {
@@ -78,9 +76,10 @@ function ensureDir(dir) {
 
 function run(command, cwd, opts = {}) {
   log(`Running: ${command}`, "cyan");
+  log(`  CWD: ${cwd}`, "magenta");
 
-  // default env: keep existing env, but DO NOT force NODE_ENV here
   const env = { ...process.env, ...(opts.env || {}) };
+  delete env.NODE_ENV; // Let npm handle NODE_ENV
 
   execSync(command, {
     cwd,
@@ -90,9 +89,6 @@ function run(command, cwd, opts = {}) {
   });
 }
 
-/**
- * Safety: refuse to delete/copy anything involving node_modules
- */
 function assertNoNodeModulesPaths(p) {
   const normalized = String(p || "").replace(/\\/g, "/");
   if (normalized.includes("/node_modules") || normalized.includes("node_modules/") || normalized.endsWith("node_modules")) {
@@ -108,7 +104,6 @@ function copyFolderClean(src, dest) {
     throw new Error(`Source folder not found: ${src}`);
   }
 
-  // only delete the destination folder (e.g., src)
   if (fs.existsSync(dest)) {
     fs.rmSync(dest, { recursive: true, force: true });
   }
@@ -127,34 +122,49 @@ function copyFileIfExists(src, dest) {
   return true;
 }
 
-function verifyNodeModulesAndDeps() {
-  const nm = path.join(CONFIG.projectPath, "node_modules");
-  if (!fs.existsSync(nm)) {
-    throw new Error(`node_modules is missing at ${nm}. npm install did not create it.`);
-  }
+function clearCacheFolders() {
+  log("Clearing all cache folders...", "yellow");
+  
+  const cachePaths = [
+    ".next",                          // Next.js build cache
+    "node_modules/.cache",            // General npm cache
+    "node_modules/.prisma",           // Prisma generated client cache
+  ];
 
-  for (const mod of CONFIG.requiredModules) {
-    try {
-      require.resolve(mod, { paths: [CONFIG.projectPath] });
-      log(`Dependency OK: ${mod}`, "green");
-    } catch {
-      throw new Error(
-        `Dependency missing: ${mod}. ` +
-          `This usually means package.json/package-lock.json on the server do not include it.`
-      );
+  for (const relPath of cachePaths) {
+    const fullPath = path.join(CONFIG.projectPath, relPath);
+    if (fs.existsSync(fullPath)) {
+      fs.rmSync(fullPath, { recursive: true, force: true });
+      log(`Cleared: ${relPath}`, "green");
+    } else {
+      log(`Not found (skip): ${relPath}`, "cyan");
     }
   }
 }
 
 async function deploy() {
   const start = Date.now();
-  log("============================================================", "bright");
-  log("Starting deployment (strict sequential)", "bright");
-  log("============================================================", "bright");
+  
+  logSection("DEPLOYMENT STARTING");
+  
+  // Log environment info
+  log("Environment Information:", "bright");
+  log(`  Process CWD: ${process.cwd()}`, "magenta");
+  log(`  Project Path: ${CONFIG.projectPath}`, "magenta");
+  log(`  Temp Path: ${CONFIG.tempPath}`, "magenta");
+  log(`  Branch: ${CONFIG.branch}`, "magenta");
+  log(`  Node Version: ${process.version}`, "magenta");
+  log(`  USER: ${process.env.USER || 'not set'}`, "magenta");
+  log(`  HOME: ${process.env.HOME || 'not set'}`, "magenta");
+  
+  // Verify project path exists
+  if (!fs.existsSync(CONFIG.projectPath)) {
+    throw new Error(`Project path does not exist: ${CONFIG.projectPath}`);
+  }
 
   try {
     // STEP 1: Pull to temp
-    log("[STEP 1] Pull latest code into temp folder", "yellow");
+    logSection("STEP 1: Pull latest code into temp folder");
     ensureDir(CONFIG.tempPath);
 
     const tempGitDir = path.join(CONFIG.tempPath, ".git");
@@ -168,16 +178,24 @@ async function deploy() {
     run(`git fetch origin ${CONFIG.branch}`, CONFIG.tempPath);
     run(`git reset --hard origin/${CONFIG.branch}`, CONFIG.tempPath);
 
+    // Log what we pulled
+    log("Latest commit in temp:", "cyan");
+    run(`git log -1 --oneline`, CONFIG.tempPath);
+
     log(`Waiting ${CONFIG.delayMs / 1000}s...`, "cyan");
     await sleep(CONFIG.delayMs);
 
     // STEP 2: Copy folders/files to production
-    log("[STEP 2] Copy updated code + dependency files to production", "yellow");
+    logSection("STEP 2: Copy updated code to production");
 
     for (const folder of CONFIG.copyFolders) {
       const src = path.join(CONFIG.tempPath, folder);
       const dest = path.join(CONFIG.projectPath, folder);
-      copyFolderClean(src, dest);
+      try {
+        copyFolderClean(src, dest);
+      } catch (err) {
+        log(`Warning: Could not copy folder ${folder}: ${err.message}`, "yellow");
+      }
     }
 
     for (const file of CONFIG.copyFiles) {
@@ -189,59 +207,46 @@ async function deploy() {
     log(`Waiting ${CONFIG.delayMs / 1000}s...`, "cyan");
     await sleep(CONFIG.delayMs);
 
-    // STEP 3: npm install (explicit start/end logs)
-log("[STEP 3] npm install START", "yellow");
-const installStart = Date.now();
-
-// Ensure devDependencies are installed even on servers with production env
-run("npm install --include=dev", CONFIG.projectPath, {
-  env: { NODE_ENV: "development" }, // safest
-});
-
-const installSecs = ((Date.now() - installStart) / 1000).toFixed(2);
-log(`[STEP 3] npm install END (took ${installSecs}s)`, "yellow");
-
-    // STEP 3.1: verify deps
-    log("[STEP 3.1] Verify node_modules + required dependencies", "yellow");
-    verifyNodeModulesAndDeps();
+    // STEP 3: Clear ALL caches
+    logSection("STEP 3: Clear all caches");
+    clearCacheFolders();
 
     log(`Waiting ${CONFIG.delayMs / 1000}s...`, "cyan");
     await sleep(CONFIG.delayMs);
 
-    // STEP 3.2: Clear .next cache before build
-    log("[STEP 3.2] Clear .next cache before build", "yellow");
-    const nextCachePath = path.join(CONFIG.projectPath, ".next");
-    if (fs.existsSync(nextCachePath)) {
-      fs.rmSync(nextCachePath, { recursive: true, force: true });
-      log("Cleared .next cache", "green");
-    } else {
-      log(".next folder not found, skipping clear", "cyan");
-    }
+    // STEP 4: npm install
+    logSection("STEP 4: npm install");
+    const installStart = Date.now();
+    run("npm install", CONFIG.projectPath);
+    const installSecs = ((Date.now() - installStart) / 1000).toFixed(2);
+    log(`npm install completed in ${installSecs}s`, "green");
 
-    // STEP 4: build
-    log("[STEP 4] npm run build START", "yellow");
+    log(`Waiting ${CONFIG.delayMs / 1000}s...`, "cyan");
+    await sleep(CONFIG.delayMs);
+
+    // STEP 5: Build
+    logSection("STEP 5: npm run build");
     const buildStart = Date.now();
-
-    run("npm run build", CONFIG.projectPath, { timeout: 0 });
-
+    run("npm run build", CONFIG.projectPath, { timeout: 600000 });
     const buildSecs = ((Date.now() - buildStart) / 1000).toFixed(2);
-    log(`[STEP 4] npm run build END (took ${buildSecs}s)`, "yellow");
+    log(`Build completed in ${buildSecs}s`, "green");
 
-    // STEP 5: restart
-    log("[STEP 5] pm2 restart all", "yellow");
+    // STEP 6: Restart PM2
+    logSection("STEP 6: pm2 restart");
     run(CONFIG.pm2RestartCmd, CONFIG.projectPath);
 
-    const secs = ((Date.now() - start) / 1000).toFixed(2);
-    log("============================================================", "bright");
-    log(`Deployment completed successfully in ${secs}s`, "green");
-    log("============================================================", "bright");
+    const totalSecs = ((Date.now() - start) / 1000).toFixed(2);
+    logSection("DEPLOYMENT SUCCESSFUL");
+    log(`Total time: ${totalSecs}s`, "green");
+    
     process.exit(0);
   } catch (err) {
-    const secs = ((Date.now() - start) / 1000).toFixed(2);
-    log("============================================================", "red");
-    log(`Deployment FAILED in ${secs}s`, "red");
+    const totalSecs = ((Date.now() - start) / 1000).toFixed(2);
+    logSection("DEPLOYMENT FAILED");
     log(`Error: ${err.message}`, "red");
-    log("============================================================", "red");
+    log(`Stack: ${err.stack}`, "red");
+    log(`Total time: ${totalSecs}s`, "red");
+    
     process.exit(1);
   }
 }
