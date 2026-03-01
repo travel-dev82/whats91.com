@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { 
   Database,
   ArrowDown,
@@ -37,6 +37,7 @@ export function GoogleSheetAnimation() {
   const [highlightedRow, setHighlightedRow] = useState<number | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [syncCount, setSyncCount] = useState(0);
+  const isMounted = useRef(false);
 
   const runAnimation = useCallback(() => {
     // Reset
@@ -69,8 +70,24 @@ export function GoogleSheetAnimation() {
   }, []);
 
   useEffect(() => {
-    // Initial run
-    runAnimation();
+    // Only run animation after initial mount
+    if (!isMounted.current) {
+      isMounted.current = true;
+      // Use setTimeout to defer the first animation call
+      const timer = setTimeout(() => {
+        runAnimation();
+      }, 0);
+      
+      // Repeat every 10 seconds
+      const interval = setInterval(() => {
+        runAnimation();
+      }, 10000);
+
+      return () => {
+        clearTimeout(timer);
+        clearInterval(interval);
+      };
+    }
 
     // Repeat every 10 seconds
     const interval = setInterval(() => {

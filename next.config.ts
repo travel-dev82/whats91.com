@@ -9,6 +9,10 @@ const nextConfig: NextConfig = {
   reactStrictMode: false,
   // Ensure Prisma binaries are included in standalone build
   serverExternalPackages: ['@prisma/client', 'prisma'],
+  // Include version.txt in standalone build
+  outputFileTracingIncludes: {
+    '/*': ['./version.txt'],
+  },
 };
 
 export default nextConfig;

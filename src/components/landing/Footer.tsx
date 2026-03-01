@@ -1,7 +1,8 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
-import { MessageCircle, Mail, MapPin, Phone } from "lucide-react";
+import { MessageCircle, Mail, MapPin, Phone, Tag } from "lucide-react";
 import { BookDemoPopup } from "@/components/landing/BookDemoPopup";
 
 // WhatsApp logo component
@@ -54,6 +55,15 @@ const footerLinks = {
 };
 
 export function Footer() {
+  const [version, setVersion] = useState<string>("...");
+
+  useEffect(() => {
+    fetch("/api/version")
+      .then((res) => res.json())
+      .then((data) => setVersion(data.version))
+      .catch(() => setVersion("?.?.?"));
+  }, []);
+
   return (
     <footer className="border-t border-border/60 bg-surface/30">
       <div className="px-4 sm:px-6 lg:px-8 max-w-[1200px] mx-auto py-10 sm:py-12 md:py-16">
@@ -184,9 +194,15 @@ export function Footer() {
 
         {/* Bottom Bar */}
         <div className="mt-10 sm:mt-12 md:mt-14 pt-6 sm:pt-8 border-t border-border/60 flex flex-col sm:flex-row justify-between items-center gap-4">
-          <p className="text-xs sm:text-sm text-text-muted text-center sm:text-left">
-            © {new Date().getFullYear()} Whats91. All rights reserved.
-          </p>
+          <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-4">
+            <p className="text-xs sm:text-sm text-text-muted text-center sm:text-left">
+              © {new Date().getFullYear()} Whats91. All rights reserved.
+            </p>
+            <div className="flex items-center gap-1.5 text-xs text-text-muted">
+              <Tag className="h-3 w-3" />
+              <span className="font-mono">v{version}</span>
+            </div>
+          </div>
           <div className="flex flex-wrap justify-center gap-4 sm:gap-6">
             {footerLinks.legal.map((link) => (
               <Link

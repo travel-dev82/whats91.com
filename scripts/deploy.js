@@ -1,13 +1,16 @@
 #!/usr/bin/env node
+/* eslint-disable @typescript-eslint/no-require-imports */
 
 /**
  * Deploy script for whats91.com
  * Uses spawn with completely isolated environment
+ * Sends WhatsApp notifications on deployment completion
  */
 
 const { spawn } = require("child_process");
 const fs = require("fs");
 const path = require("path");
+const https = require("https");
 
 // ====== CONFIG ======
 const CONFIG = {
@@ -17,6 +20,14 @@ const CONFIG = {
   branch: process.env.GITHUB_WEBHOOK_BRANCH || "main",
   delayMs: 5000,
   pm2RestartCmd: "pm2 restart all",
+
+  // Bot Master Sender API config for notifications
+  botMaster: {
+    apiUrl: process.env.BOT_MASTER_API_URL || "https://api.botmastersender.com/api/v1/?action=send",
+    senderId: process.env.BOT_MASTER_SENDER_ID || "919425004029",
+    receiverId: process.env.BOT_MASTER_RECEIVER_ID || "917000782082",
+    authToken: process.env.BOT_MASTER_AUTH_TOKEN || "",
+  },
 
   copyFolders: ["src", "prisma", "scripts", "public"],
   copyFiles: [
@@ -32,6 +43,7 @@ const CONFIG = {
     "next.config.js",
     "next.config.mjs",
     "next.config.ts",
+    "version.txt",
   ],
 };
 
@@ -170,6 +182,133 @@ function clearCacheFolders() {
   }
 }
 
+/**
+ * Read version from version.txt
+ */
+function getVersion() {
+  try {
+    const versionPath = path.join(CONFIG.projectPath, "version.txt");
+    if (fs.existsSync(versionPath)) {
+      return fs.readFileSync(versionPath, "utf-8").trim();
+    }
+  } catch (err) {
+    log(`Could not read version.txt: ${err.message}`, "yellow");
+  }
+  return "?.?.?";
+}
+
+/**
+ * Get current git commit info from temp folder
+ */
+function getGitInfo() {
+  try {
+    const commitHash = require("child_process")
+      .execSync(`git -C "${CONFIG.tempPath}" rev-parse --short HEAD`, { encoding: "utf-8" })
+      .trim();
+    const commitMsg = require("child_process")
+      .execSync(`git -C "${CONFIG.tempPath}" log -1 --pretty=%s`, { encoding: "utf-8" })
+      .trim();
+    return { hash: commitHash, message: commitMsg };
+  } catch (err) {
+    return { hash: "unknown", message: "unknown" };
+  }
+}
+
+/**
+ * Send WhatsApp notification via Bot Master Sender API
+ */
+async function sendDeploymentNotification(status, data) {
+  const { botMaster } = CONFIG;
+  
+  if (!botMaster.authToken) {
+    log("Bot Master auth token not configured, skipping notification", "yellow");
+    return;
+  }
+
+  const timestamp = new Date().toLocaleString("en-IN", { timeZone: "Asia/Kolkata" });
+  const version = getVersion();
+  const gitInfo = getGitInfo();
+  
+  let messageText;
+  
+  if (status === "success") {
+    messageText = `✅ *Deployment Successful*
+
+🚀 *whats91.com* deployed successfully!
+━━━━━━━━━━━━━━━━━━━━
+📦 *Version:* v${version}
+🔗 *Commit:* \`${gitInfo.hash}\`
+📝 *Message:* ${gitInfo.message}
+⏱️ *Duration:* ${data.duration}s
+━━━━━━━━━━━━━━━━━━━━
+
+📅 *Deployed:* ${timestamp}
+🌐 *Branch:* ${CONFIG.branch}`;
+  } else {
+    messageText = `❌ *Deployment Failed*
+
+⚠️ *whats91.com* deployment encountered an error!
+━━━━━━━━━━━━━━━━━━━━
+📦 *Version:* v${version}
+🔗 *Commit:* \`${gitInfo.hash}\`
+📝 *Message:* ${gitInfo.message}
+━━━━━━━━━━━━━━━━━━━━
+
+🔴 *Error:*
+\`\`\`
+${data.error.substring(0, 500)}${data.error.length > 500 ? "..." : ""}
+\`\`\`
+
+📅 *Failed at:* ${timestamp}
+🌐 *Branch:* ${CONFIG.branch}
+
+⚡ *Action Required:* Check deployment logs immediately.`;
+  }
+
+  const payload = JSON.stringify({
+    senderId: botMaster.senderId,
+    receiverId: botMaster.receiverId,
+    messageText: messageText,
+    authToken: botMaster.authToken,
+  });
+
+  return new Promise((resolve) => {
+    const url = new URL(botMaster.apiUrl);
+    
+    const options = {
+      hostname: url.hostname,
+      port: 443,
+      path: url.pathname + url.search,
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Content-Length": Buffer.byteLength(payload),
+      },
+    };
+
+    const req = https.request(options, (res) => {
+      let body = "";
+      res.on("data", (chunk) => (body += chunk));
+      res.on("end", () => {
+        if (res.statusCode === 200) {
+          log("WhatsApp notification sent successfully", "green");
+        } else {
+          log(`WhatsApp notification failed: ${res.statusCode} ${body}`, "yellow");
+        }
+        resolve();
+      });
+    });
+
+    req.on("error", (err) => {
+      log(`WhatsApp notification error: ${err.message}`, "yellow");
+      resolve();
+    });
+
+    req.write(payload);
+    req.end();
+  });
+}
+
 async function deploy() {
   const start = Date.now();
   
@@ -265,6 +404,9 @@ async function deploy() {
     logSection("DEPLOYMENT SUCCESSFUL");
     log(`Total time: ${totalSecs}s`, "green");
     
+    // Send success notification
+    await sendDeploymentNotification("success", { duration: totalSecs });
+    
     process.exit(0);
   } catch (err) {
     const totalSecs = ((Date.now() - start) / 1000).toFixed(2);
@@ -274,6 +416,12 @@ async function deploy() {
       log(`Stack: ${err.stack}`, "red");
     }
     log(`Total time: ${totalSecs}s`, "red");
+    
+    // Send failure notification
+    await sendDeploymentNotification("failed", { 
+      error: err.message,
+      duration: totalSecs 
+    });
     
     process.exit(1);
   }
