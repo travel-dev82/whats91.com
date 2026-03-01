@@ -312,6 +312,10 @@ ${data.error.substring(0, 500)}${data.error.length > 500 ? "..." : ""}
     authToken: botMaster.authToken,
   });
 
+  // Log request details (with masked token)
+  log(`Sending notification to: ${botMaster.apiUrl}`, "cyan");
+  log(`Payload (masked): senderId=${botMaster.senderId}, receiverId=${botMaster.receiverId}, messageText.length=${messageText.length}`, "magenta");
+
   return new Promise((resolve) => {
     const url = new URL(botMaster.apiUrl);
     
@@ -330,6 +334,11 @@ ${data.error.substring(0, 500)}${data.error.length > 500 ? "..." : ""}
       let body = "";
       res.on("data", (chunk) => (body += chunk));
       res.on("end", () => {
+        // Log full API response for debugging
+        log(`API Response Status: ${res.statusCode}`, "cyan");
+        log(`API Response Headers: ${JSON.stringify(res.headers)}`, "magenta");
+        log(`API Response Body: ${body}`, "cyan");
+        
         if (res.statusCode === 200) {
           log("WhatsApp notification sent successfully", "green");
         } else {
@@ -340,7 +349,8 @@ ${data.error.substring(0, 500)}${data.error.length > 500 ? "..." : ""}
     });
 
     req.on("error", (err) => {
-      log(`WhatsApp notification error: ${err.message}`, "yellow");
+      log(`WhatsApp notification error: ${err.message}`, "red");
+      log(`Error stack: ${err.stack}`, "red");
       resolve();
     });
 
