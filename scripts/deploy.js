@@ -1,251 +1,239 @@
 #!/usr/bin/env node
 
 /**
- * Standalone Deployment Script for Whats91.com
- * Triggered by GitHub webhook to deploy latest code
- * 
- * Usage: node scripts/deploy.js
+ * Deploy script for whats91.com
+ * Strict sequential flow, does NOT touch node_modules, and ensures dependency files are updated.
+ *
+ * Steps:
+ * 1) Pull latest code into temp folder
+ * 2) Wait 5 seconds
+ * 3) Copy src + package.json + package-lock.json (+ configs if present) from temp -> project
+ * 4) Wait 5 seconds
+ * 5) npm install (block until complete)
+ * 6) Verify required deps resolvable
+ * 7) Wait 5 seconds
+ * 8) npm run build (block until complete)
+ * 9) pm2 restart all
  */
 
-const { execSync } = require('child_process');
-const path = require('path');
-const fs = require('fs');
+const { execSync } = require("child_process");
+const fs = require("fs");
+const path = require("path");
 
-// Configuration
+// ====== CONFIG ======
 const CONFIG = {
-  // Production project path
-  projectPath: process.env.GITHUB_WEBHOOK_PROJECT_PATH || '/home/whats91/htdocs/whats91.com',
-  
-  // Temp directory for git operations
-  tempPath: process.env.DEPLOY_TEMP_PATH || '/home/whats91/htdocs/whats91.com/temp',
-  
-  // Git repository URL
-  repoUrl: 'https://github.com/travel-dev82/whats91.com.git',
-  
-  // Branch to deploy
-  branch: process.env.GITHUB_WEBHOOK_BRANCH || 'main',
-  
-  // PM2 process name
-  pm2Process: process.env.PM2_PROCESS_NAME || 'whats91',
-  
-  // Delay between steps (ms)
+  projectPath: process.env.GITHUB_WEBHOOK_PROJECT_PATH || "/home/whats91/htdocs/whats91.com",
+  tempPath: process.env.DEPLOY_TEMP_PATH || "/home/whats91/htdocs/whats91.com/temp",
+  repoUrl: process.env.DEPLOY_REPO_URL || "https://github.com/travel-dev82/whats91.com.git",
+  branch: process.env.GITHUB_WEBHOOK_BRANCH || "main",
   delayMs: 5000,
-  
-  // Folders to update (only these will be copied)
-  updateFolders: ['src', 'prisma', 'scripts', 'public'],
-  
-  // Files to preserve (won't be overwritten)
-  preserveFiles: ['.env', 'db/custom.db'],
-  
-  // Files to copy from temp root
-  copyFiles: ['package.json', 'package-lock.json', 'next.config.ts', 'tsconfig.json', 'tailwind.config.ts', 'postcss.config.mjs', 'components.json', 'ecosystem.config.cjs'],
+  pm2RestartCmd: "pm2 restart all",
+
+  // Copy these folders/files from temp into production
+  copyFolders: ["src"],
+  copyFiles: [
+    "package.json",
+    "package-lock.json",
+    // optional configs (copied only if they exist in temp)
+    "postcss.config.js",
+    "postcss.config.cjs",
+    "postcss.config.mjs",
+    "tailwind.config.js",
+    "tailwind.config.cjs",
+    "tailwind.config.mjs",
+    "tailwind.config.ts",
+    "next.config.js",
+    "next.config.mjs",
+    "next.config.ts",
+  ],
+
+  requiredModules: ["@tailwindcss/postcss"],
 };
 
-// Colors for console output
+// ====== Pretty logs ======
 const colors = {
-  reset: '\x1b[0m',
-  bright: '\x1b[1m',
-  green: '\x1b[32m',
-  yellow: '\x1b[33m',
-  red: '\x1b[31m',
-  cyan: '\x1b[36m',
+  reset: "\x1b[0m",
+  bright: "\x1b[1m",
+  green: "\x1b[32m",
+  yellow: "\x1b[33m",
+  red: "\x1b[31m",
+  cyan: "\x1b[36m",
 };
 
-function log(message, color = 'reset') {
-  const timestamp = new Date().toISOString();
-  console.log(`${colors[color]}[${timestamp}] [deploy] ${message}${colors.reset}`);
+function log(message, color = "reset") {
+  const ts = new Date().toISOString();
+  console.log(`${colors[color]}[${ts}] [deploy] ${message}${colors.reset}`);
 }
 
 function sleep(ms) {
-  return new Promise(resolve => setTimeout(resolve, ms));
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-function runCommand(command, cwd, options = {}) {
-  log(`Running: ${command}`, 'cyan');
-  
-  try {
-    const result = execSync(command, {
-      cwd,
-      encoding: 'utf8',
-      stdio: options.silent ? 'pipe' : 'inherit',
-      timeout: options.timeout || 300000, // 5 min timeout
-      env: { ...process.env, NODE_ENV: 'production' },
-    });
-    return { success: true, output: result };
-  } catch (error) {
-    if (options.continueOnError) {
-      log(`Command failed but continuing: ${command}`, 'yellow');
-      log(error.message, 'yellow');
-      return { success: false, error: error.message };
-    }
-    throw error;
-  }
-}
-
-function ensureDirectory(dir) {
+function ensureDir(dir) {
   if (!fs.existsSync(dir)) {
-    log(`Creating directory: ${dir}`, 'yellow');
     fs.mkdirSync(dir, { recursive: true });
+    log(`Created directory: ${dir}`, "yellow");
   }
 }
 
-function copyFolder(src, dest) {
-  log(`Copying: ${src} -> ${dest}`, 'cyan');
-  
-  // Remove destination if exists
+function run(command, cwd, opts = {}) {
+  log(`Running: ${command}`, "cyan");
+
+  // default env: keep existing env, but DO NOT force NODE_ENV here
+  const env = { ...process.env, ...(opts.env || {}) };
+
+  execSync(command, {
+    cwd,
+    stdio: "inherit",
+    env,
+    timeout: opts.timeout ?? 0,
+  });
+}
+
+/**
+ * Safety: refuse to delete/copy anything involving node_modules
+ */
+function assertNoNodeModulesPaths(p) {
+  const normalized = String(p || "").replace(/\\/g, "/");
+  if (normalized.includes("/node_modules") || normalized.includes("node_modules/") || normalized.endsWith("node_modules")) {
+    throw new Error(`Safety stop: node_modules path detected: ${p}`);
+  }
+}
+
+function copyFolderClean(src, dest) {
+  assertNoNodeModulesPaths(src);
+  assertNoNodeModulesPaths(dest);
+
+  if (!fs.existsSync(src)) {
+    throw new Error(`Source folder not found: ${src}`);
+  }
+
+  // only delete the destination folder (e.g., src)
   if (fs.existsSync(dest)) {
     fs.rmSync(dest, { recursive: true, force: true });
   }
-  
-  // Copy recursively
+
   fs.cpSync(src, dest, { recursive: true });
+  log(`Copied folder: ${src} -> ${dest}`, "green");
 }
 
-function copyFile(src, dest) {
-  if (fs.existsSync(src)) {
-    fs.copyFileSync(src, dest);
-    log(`Copied: ${path.basename(src)}`, 'cyan');
+function copyFileIfExists(src, dest) {
+  assertNoNodeModulesPaths(src);
+  assertNoNodeModulesPaths(dest);
+
+  if (!fs.existsSync(src)) return false;
+  fs.copyFileSync(src, dest);
+  log(`Copied file: ${path.basename(src)}`, "green");
+  return true;
+}
+
+function verifyNodeModulesAndDeps() {
+  const nm = path.join(CONFIG.projectPath, "node_modules");
+  if (!fs.existsSync(nm)) {
+    throw new Error(`node_modules is missing at ${nm}. npm install did not create it.`);
+  }
+
+  for (const mod of CONFIG.requiredModules) {
+    try {
+      require.resolve(mod, { paths: [CONFIG.projectPath] });
+      log(`Dependency OK: ${mod}`, "green");
+    } catch {
+      throw new Error(
+        `Dependency missing: ${mod}. ` +
+          `This usually means package.json/package-lock.json on the server do not include it.`
+      );
+    }
   }
 }
 
 async function deploy() {
-  const startTime = Date.now();
-  log('='.repeat(60), 'bright');
-  log('Starting deployment process', 'bright');
-  log('='.repeat(60), 'bright');
-  
+  const start = Date.now();
+  log("============================================================", "bright");
+  log("Starting deployment (strict sequential)", "bright");
+  log("============================================================", "bright");
+
   try {
-    // Step 1: Setup temp directory
-    log('\n[STEP 1] Setting up temp directory...', 'yellow');
-    ensureDirectory(CONFIG.tempPath);
-    
-    // Check if temp is a git repo, if not initialize
-    const tempGitDir = path.join(CONFIG.tempPath, '.git');
+    // STEP 1: Pull to temp
+    log("[STEP 1] Pull latest code into temp folder", "yellow");
+    ensureDir(CONFIG.tempPath);
+
+    const tempGitDir = path.join(CONFIG.tempPath, ".git");
     if (!fs.existsSync(tempGitDir)) {
-      log('Initializing git repository in temp directory...', 'cyan');
-      runCommand('git init', CONFIG.tempPath);
-      runCommand(`git remote add origin ${CONFIG.repoUrl}`, CONFIG.tempPath, { continueOnError: true });
+      log("Temp folder is not a git repo. Initializing...", "cyan");
+      run("git init", CONFIG.tempPath);
+      run(`git remote add origin ${CONFIG.repoUrl}`, CONFIG.tempPath);
     }
-    
-    // Step 2: Fetch latest code
-    log('\n[STEP 2] Fetching latest code from GitHub...', 'yellow');
-    runCommand(`git fetch origin ${CONFIG.branch}`, CONFIG.tempPath);
-    runCommand(`git reset --hard origin/${CONFIG.branch}`, CONFIG.tempPath);
-    
-    log(`Waiting ${CONFIG.delayMs / 1000} seconds...`, 'cyan');
+
+    run(`git remote set-url origin ${CONFIG.repoUrl}`, CONFIG.tempPath);
+    run(`git fetch origin ${CONFIG.branch}`, CONFIG.tempPath);
+    run(`git reset --hard origin/${CONFIG.branch}`, CONFIG.tempPath);
+
+    log(`Waiting ${CONFIG.delayMs / 1000}s...`, "cyan");
     await sleep(CONFIG.delayMs);
-    
-    // Step 3: Copy files to production
-    log('\n[STEP 3] Updating production files...', 'yellow');
-    
-    // Backup preserved files
-    const backups = {};
-    for (const file of CONFIG.preserveFiles) {
-      const filePath = path.join(CONFIG.projectPath, file);
-      if (fs.existsSync(filePath)) {
-        backups[file] = fs.readFileSync(filePath);
-        log(`Backed up: ${file}`, 'cyan');
-      }
+
+    // STEP 2: Copy folders/files to production
+    log("[STEP 2] Copy updated code + dependency files to production", "yellow");
+
+    for (const folder of CONFIG.copyFolders) {
+      const src = path.join(CONFIG.tempPath, folder);
+      const dest = path.join(CONFIG.projectPath, folder);
+      copyFolderClean(src, dest);
     }
-    
-    // Copy folders
-    for (const folder of CONFIG.updateFolders) {
-      const srcPath = path.join(CONFIG.tempPath, folder);
-      const destPath = path.join(CONFIG.projectPath, folder);
-      
-      if (fs.existsSync(srcPath)) {
-        copyFolder(srcPath, destPath);
-      } else {
-        log(`Source folder not found: ${srcPath}`, 'yellow');
-      }
-    }
-    
-    // Copy root files
+
     for (const file of CONFIG.copyFiles) {
-      const srcPath = path.join(CONFIG.tempPath, file);
-      const destPath = path.join(CONFIG.projectPath, file);
-      copyFile(srcPath, destPath);
+      const src = path.join(CONFIG.tempPath, file);
+      const dest = path.join(CONFIG.projectPath, file);
+      copyFileIfExists(src, dest);
     }
-    
-    // Restore preserved files
-    for (const [file, content] of Object.entries(backups)) {
-      const filePath = path.join(CONFIG.projectPath, file);
-      fs.writeFileSync(filePath, content);
-      log(`Restored: ${file}`, 'cyan');
-    }
-    
-    log(`Waiting ${CONFIG.delayMs / 1000} seconds...`, 'cyan');
+
+    log(`Waiting ${CONFIG.delayMs / 1000}s...`, "cyan");
     await sleep(CONFIG.delayMs);
-    
-    // Step 4: Clean caches and reinstall
-    log('\n[STEP 4] Cleaning caches and reinstalling dependencies...', 'yellow');
-    
-    // Clear Next.js cache
-    const nextCachePath = path.join(CONFIG.projectPath, '.next');
-    if (fs.existsSync(nextCachePath)) {
-      log('Clearing .next cache...', 'cyan');
-      fs.rmSync(nextCachePath, { recursive: true, force: true });
-    }
-    
-    // Clear node_modules/.cache if exists
-    const cachePath = path.join(CONFIG.projectPath, 'node_modules', '.cache');
-    if (fs.existsSync(cachePath)) {
-      log('Clearing node_modules/.cache...', 'cyan');
-      fs.rmSync(cachePath, { recursive: true, force: true });
-    }
-    
-    // Delete .prisma client cache
-    const prismaClientPath = path.join(CONFIG.projectPath, 'node_modules', '.prisma');
-    if (fs.existsSync(prismaClientPath)) {
-      log('Clearing .prisma cache...', 'cyan');
-      fs.rmSync(prismaClientPath, { recursive: true, force: true });
-    }
-    
-    const prismaClientPath2 = path.join(CONFIG.projectPath, 'node_modules', '@prisma', 'client');
-    if (fs.existsSync(prismaClientPath2)) {
-      log('Clearing @prisma/client cache...', 'cyan');
-      fs.rmSync(prismaClientPath2, { recursive: true, force: true });
-    }
-    
-    // Run clean install
-    runCommand('npm ci --legacy-peer-deps', CONFIG.projectPath);
-    
-    log(`Waiting ${CONFIG.delayMs / 1000} seconds...`, 'cyan');
+
+    // STEP 3: npm install (explicit start/end logs)
+log("[STEP 3] npm install START", "yellow");
+const installStart = Date.now();
+
+// Ensure devDependencies are installed even on servers with production env
+run("npm install --include=dev", CONFIG.projectPath, {
+  env: { NODE_ENV: "development" }, // safest
+});
+
+const installSecs = ((Date.now() - installStart) / 1000).toFixed(2);
+log(`[STEP 3] npm install END (took ${installSecs}s)`, "yellow");
+
+    // STEP 3.1: verify deps
+    log("[STEP 3.1] Verify node_modules + required dependencies", "yellow");
+    verifyNodeModulesAndDeps();
+
+    log(`Waiting ${CONFIG.delayMs / 1000}s...`, "cyan");
     await sleep(CONFIG.delayMs);
-    
-    // Step 5: Build project
-    log('\n[STEP 5] Building project...', 'yellow');
-    runCommand('npm run build', CONFIG.projectPath, { timeout: 600000 }); // 10 min timeout for build
-    
-    log(`Waiting ${CONFIG.delayMs / 1000} seconds...`, 'cyan');
-    await sleep(CONFIG.delayMs);
-    
-    // Step 6: Restart PM2
-    log('\n[STEP 6] Restarting PM2 process...', 'yellow');
-    if (CONFIG.pm2Process === 'all') {
-      runCommand('pm2 restart all', CONFIG.projectPath);
-    } else {
-      runCommand(`pm2 restart ${CONFIG.pm2Process}`, CONFIG.projectPath);
-    }
-    
-    // Done!
-    const duration = Date.now() - startTime;
-    log('\n' + '='.repeat(60), 'bright');
-    log(`Deployment completed successfully!`, 'green');
-    log(`Duration: ${(duration / 1000).toFixed(2)} seconds`, 'green');
-    log('='.repeat(60), 'bright');
-    
+
+    // STEP 4: build
+    log("[STEP 4] npm run build START", "yellow");
+    const buildStart = Date.now();
+
+    run("npm run build", CONFIG.projectPath, { timeout: 0 });
+
+    const buildSecs = ((Date.now() - buildStart) / 1000).toFixed(2);
+    log(`[STEP 4] npm run build END (took ${buildSecs}s)`, "yellow");
+
+    // STEP 5: restart
+    log("[STEP 5] pm2 restart all", "yellow");
+    run(CONFIG.pm2RestartCmd, CONFIG.projectPath);
+
+    const secs = ((Date.now() - start) / 1000).toFixed(2);
+    log("============================================================", "bright");
+    log(`Deployment completed successfully in ${secs}s`, "green");
+    log("============================================================", "bright");
     process.exit(0);
-  } catch (error) {
-    const duration = Date.now() - startTime;
-    log('\n' + '='.repeat(60), 'red');
-    log(`Deployment failed after ${(duration / 1000).toFixed(2)} seconds`, 'red');
-    log(`Error: ${error.message}`, 'red');
-    log('='.repeat(60), 'red');
-    
+  } catch (err) {
+    const secs = ((Date.now() - start) / 1000).toFixed(2);
+    log("============================================================", "red");
+    log(`Deployment FAILED in ${secs}s`, "red");
+    log(`Error: ${err.message}`, "red");
+    log("============================================================", "red");
     process.exit(1);
   }
 }
 
-// Run deployment
 deploy();
