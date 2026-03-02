@@ -1,0 +1,56 @@
+# Whats91
+
+> Enterprise WhatsApp Cloud API Platform - Official Meta Business Solution Provider for India. Transform business communication with 500+ msgs/sec throughput, 99.9% uptime, and seamless ERP integrations.
+
+## Core Services
+
+- [WhatsApp Cloud API Integration](/solutions/busy-erp) - Complete enterprise messaging solution with official Meta partnership
+- [Busy Accounting Integration](/solutions/busy-erp) - Automated invoice delivery, payment reminders, and 24/7 chatbot for Busy ERP
+- [WhatsApp Business Templates](/whatsapp-templates) - 20+ pre-approved message templates for marketing, utility, and authentication
+- [WhatsApp Coexistence Guide](/whatsapp-coexistence) - Strategic implementation for microbusinesses using both App and Cloud API
+
+## Free Tools
+
+- [WhatsApp Link Generator](/tools/whatsapp-link-generator) - Generate wa.me links with pre-filled messages
+- [QR Code Generator](/tools/qr-code-generator) - Create QR codes for URLs, vCards, WiFi, and more
+- [WhatsApp API Cost Calculator](/tools/whatsapp-api-cost-calculator) - Calculate messaging costs by country and category
+- [GST Calculator](/tools/gst-calculator) - Indian GST computation tool
+- [SIP Calculator](/tools/sip-calculator) - Systematic Investment Plan returns calculator
+- [Image Compressor](/tools/image-compressor) - Client-side image optimization
+- [SEO Score Checker](/tools/seo-checker) - Analyze webpage SEO performance
+- [Case Converter](/tools/case-converter) - Text case transformation utility
+
+## Documentation & Resources
+
+- [API Documentation](/solutions/busy-api) - WhatsApp Cloud API integration guides
+- [Blog](/blog) - Technical articles on WhatsApp API, ERP integrations, and automation
+- [Pricing](/pricing) - Transparent pricing for WhatsApp Business API services
+
+## Key Entities
+
+- **Organization**: Wilford Technology (Parent Company)
+- **Platform**: Whats91
+- **Primary Market**: India
+- **Technology Stack**: Next.js, TypeScript, WhatsApp Cloud API, Prisma
+- **Industry**: Business Communication, Enterprise Messaging, ERP Integration
+
+## Integrations
+
+- Busy Accounting Software
+- Tally ERP (Coming Soon)
+- Zoho CRM (Coming Soon)
+- Custom REST APIs
+
+## Compliance
+
+- GDPR Compliant
+- ISO 27001 Certified Infrastructure
+- Meta Business Solution Provider
+- Data Localization: India
+
+## Optional (Context-Constrained)
+
+Resources that may be skipped for smaller context windows:
+
+- [Careers](/careers) - Job opportunities at Whats91
+- [Cookie Policy](/cookies) - Cookie usage information
