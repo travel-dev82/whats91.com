@@ -183,10 +183,34 @@ function main() {
   // Push if requested
   if (shouldPush) {
     log('🚀 Pushing to remote...', 'cyan');
-    runGitCommand('git push origin master');
-    runGitCommand('git push origin master:main');
-    log('', 'reset');
-    log('✅ Pushed to master and main branches', 'green');
+    
+    // Check if we have a token in environment
+    const githubToken = process.env.GITHUB_TOKEN || process.env.GH_TOKEN;
+    
+    if (githubToken) {
+      // Set remote with token
+      const repoUrl = 'https://github.com/travel-dev82/whats91.com.git';
+      const authUrl = `https://${githubToken}@${repoUrl.replace('https://', '')}`;
+      runGitCommand(`git remote set-url origin ${authUrl}`, true);
+    }
+    
+    try {
+      runGitCommand('git push origin master');
+      runGitCommand('git push origin master:main');
+      log('', 'reset');
+      log('✅ Pushed to master and main branches', 'green');
+    } catch (error) {
+      log('', 'reset');
+      log('⚠️  Push failed. You may need to push manually:', 'yellow');
+      log('   git push origin master', 'reset');
+      log('   git push origin master:main', 'reset');
+    }
+    
+    // Reset remote URL (remove token)
+    if (githubToken) {
+      runGitCommand('git remote set-url origin https://github.com/travel-dev82/whats91.com.git', true);
+    }
+    
     log('', 'reset');
   } else {
     log('💡 Tip: Add --push to push to remote', 'yellow');
