@@ -2,6 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Sparkles } from "lucide-react";
+import Link from "next/link";
 
 export function FinalCTA() {
   return (
@@ -38,8 +39,8 @@ export function FinalCTA() {
               Join India&apos;s leading enterprises using Whats91 for WhatsApp Cloud API integration.
             </p>
 
-            {/* CTA Buttons */}
-            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
+            {/* CTA Button */}
+            <Link href="/contact">
               <Button 
                 size="lg" 
                 className="h-11 sm:h-12 px-7 sm:px-8 text-sm sm:text-base font-semibold bg-white text-brand-primary hover:bg-white/95 rounded-xl shadow-lg w-full sm:w-auto group transition-all duration-300 hover:shadow-xl"
@@ -47,13 +48,7 @@ export function FinalCTA() {
                 Request Technical Consultation
                 <ArrowRight className="ml-2 h-4 w-4 sm:h-5 sm:w-5 transition-transform duration-200 group-hover:translate-x-0.5" />
               </Button>
-              <Button 
-                size="lg" 
-                className="h-11 sm:h-12 px-7 sm:px-8 text-sm sm:text-base font-semibold bg-white/10 backdrop-blur-sm border border-white/20 text-white hover:bg-white/20 rounded-xl w-full sm:w-auto transition-all duration-300"
-              >
-                Contact Sales
-              </Button>
-            </div>
+            </Link>
 
             {/* Trust Badge */}
             <p className="mt-6 sm:mt-8 text-xs sm:text-sm text-white/70">
