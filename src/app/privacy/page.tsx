@@ -272,7 +272,7 @@ export default function PrivacyPage() {
             {/* Last Updated */}
             <div className="flex items-center justify-center gap-2 text-sm text-text-muted mb-8">
               <Calendar className="h-4 w-4" />
-              <span>Last Updated: June 1, 2024</span>
+              <span>Last Updated: March 3, 2026</span>
             </div>
 
             {/* Quick Nav */}
