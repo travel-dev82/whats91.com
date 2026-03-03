@@ -173,8 +173,16 @@ export function Footer() {
               <ul className="space-y-2">
                 {footerLinks.resources.map((link) => (
                   <li key={link.href}>
-                    <Link href={link.href} className="text-xs sm:text-sm text-text-secondary hover:text-brand-primary transition-colors">
+                    <Link 
+                      href={link.href} 
+                      className="text-xs sm:text-sm text-text-secondary hover:text-brand-primary transition-colors inline-flex items-center gap-1.5"
+                    >
                       {link.label}
+                      {link.featured && (
+                        <span className="inline-flex items-center rounded bg-brand-primary/10 px-1.5 py-0.5 text-[9px] font-medium text-brand-primary">
+                          Popular
+                        </span>
+                      )}
                     </Link>
                   </li>
                 ))}
