@@ -1,21 +1,51 @@
 import { NextResponse } from "next/server";
+import { siteConfig } from "@/lib/seo/config";
+import { getAllPosts } from "@/lib/blog";
 
 /**
  * MCP Server Discovery Endpoint
- * Returns available tools for AI agents
+ * Returns available tools, resources, and passage feeds for AI agents
  * Part of SEO 2.0 - Model Context Protocol implementation
  */
 
 export async function GET() {
+  const baseUrl = siteConfig.url;
+
+  // Available passage pages
+  const passagePages = [
+    { slug: "busy-erp", title: "Busy ERP Integration", priority: "high" },
+    { slug: "whatsapp-templates", title: "WhatsApp Templates Library", priority: "high" },
+    { slug: "whatsapp-coexistence", title: "WhatsApp Coexistence Guide", priority: "high" },
+    { slug: "pricing", title: "WhatsApp API Pricing", priority: "high" },
+    { slug: "google-sheets-integration", title: "Google Sheets Integration", priority: "high" },
+    { slug: "chatbot-flows", title: "Chatbot Flow Library", priority: "high" },
+    { slug: "tools", title: "Free Tools", priority: "medium" },
+  ];
+
+  // Add blog posts
+  const blogPosts = getAllPosts().slice(0, 10);
+  const blogPassages = blogPosts.map((post) => ({
+    slug: `blog-${post.slug}`,
+    title: post.title,
+    priority: "medium" as const,
+  }));
+
+  const allPassages = [...passagePages, ...blogPassages];
+
   const mcpCapabilities = {
     name: "Whats91 MCP Server",
-    version: "1.0.0",
-    description: "WhatsApp Cloud API Platform - Agent-accessible tools for business messaging",
+    version: "1.1.0",
+    description: "WhatsApp Cloud API Platform - Agent-accessible tools and passage feeds for business messaging",
     protocolVersion: "2024-11-05",
+    publisher: {
+      name: "Wilford Technology",
+      url: "https://whats91.com",
+    },
     capabilities: {
       tools: {},
       resources: {},
       prompts: {},
+      passages: {},
     },
     tools: [
       {
@@ -129,10 +159,23 @@ export async function GET() {
         mimeType: "text/markdown",
       },
     ],
+    passages: {
+      description: "Structured content passages for LLM consumption without DOM parsing",
+      format: "application/json",
+      pages: allPassages.map((page) => ({
+        slug: page.slug,
+        title: page.title,
+        priority: page.priority,
+        url: `${baseUrl}/api/mcp/pages/${page.slug}`,
+      })),
+      total: allPassages.length,
+    },
     links: {
-      documentation: "https://whats91.com/llms.txt",
-      apiDocs: "https://whats91.com/api/md/tools",
-      sitemap: "https://whats91.com/sitemap.xml",
+      documentation: `${baseUrl}/llms.txt`,
+      sitemap: `${baseUrl}/sitemap.xml`,
+      rss: `${baseUrl}/feed.xml`,
+      markdown_content: `${baseUrl}/api/md/{slug}`,
+      passage_feeds: `${baseUrl}/api/mcp/pages/{slug}`,
     },
   };
 
@@ -142,6 +185,7 @@ export async function GET() {
       "Access-Control-Allow-Origin": "*",
       "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
       "Access-Control-Allow-Headers": "Content-Type, Authorization",
+      "Cache-Control": "public, max-age=3600, s-maxage=3600",
     },
   });
 }

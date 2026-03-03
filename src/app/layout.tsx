@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
 import { CookieConsent } from "@/components/landing/CookieConsent";
+import { SEOJsonLD } from "@/components/seo/JsonLD";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -41,6 +42,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
+      <head>
+        <SEOJsonLD />
+        <link rel="alternate" type="application/rss+xml" title="Whats91 Blog RSS Feed" href="/feed.xml" />
+      </head>
       <body
         className={`${inter.variable} font-sans antialiased bg-background text-foreground`}
       >

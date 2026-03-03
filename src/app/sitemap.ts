@@ -206,6 +206,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: "weekly",
       priority: 0.9,
     },
+    {
+      url: `${baseUrl}/google-sheets-integration`,
+      lastModified: currentDate,
+      changeFrequency: "weekly",
+      priority: 0.9,
+    },
   ];
 
   // ============================================
@@ -242,6 +248,45 @@ export default function sitemap(): MetadataRoute.Sitemap {
       lastModified: currentDate,
       changeFrequency: "weekly",
       priority: 0.7,
+    },
+    // RSS Feed
+    {
+      url: `${baseUrl}/feed.xml`,
+      lastModified: currentDate,
+      changeFrequency: "daily",
+      priority: 0.6,
+    },
+    // MCP Discovery
+    {
+      url: `${baseUrl}/api/mcp`,
+      lastModified: currentDate,
+      changeFrequency: "weekly",
+      priority: 0.5,
+    },
+    // MCP Passage Feeds
+    {
+      url: `${baseUrl}/api/mcp/pages/busy-erp`,
+      lastModified: currentDate,
+      changeFrequency: "weekly",
+      priority: 0.5,
+    },
+    {
+      url: `${baseUrl}/api/mcp/pages/whatsapp-templates`,
+      lastModified: currentDate,
+      changeFrequency: "weekly",
+      priority: 0.5,
+    },
+    {
+      url: `${baseUrl}/api/mcp/pages/pricing`,
+      lastModified: currentDate,
+      changeFrequency: "weekly",
+      priority: 0.5,
+    },
+    {
+      url: `${baseUrl}/api/mcp/pages/google-sheets-integration`,
+      lastModified: currentDate,
+      changeFrequency: "weekly",
+      priority: 0.5,
     },
     // Markdown twins for key pages
     {
