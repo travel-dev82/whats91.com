@@ -122,6 +122,8 @@ Disallow: /admin/
 Disallow: /dashboard/
 Disallow: /_next/
 Disallow: /private/
+Disallow: /services/
+Disallow: /projects/
 
 # ============================================
 # CRAWL SETTINGS
