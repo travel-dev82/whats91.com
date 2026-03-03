@@ -37,7 +37,8 @@ const footerLinks = {
   ],
   resources: [
     { label: "WhatsApp Templates", href: "/whatsapp-templates" },
-    { label: "Chatbot Flow Library", href: "/chatbot-flows", featured: true },
+    { label: "WhatsApp Calling", href: "/whatsapp-business-calling", featured: true },
+    { label: "Chatbot Flow Library", href: "/chatbot-flows" },
     { label: "Google Sheets Integration", href: "/google-sheets-integration" },
     { label: "Co-Existing Mode", href: "/whatsapp-coexistence" },
     { label: "Free Tools", href: "/tools" },

@@ -171,6 +171,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 0.9,
     },
     {
+      url: `${baseUrl}/whatsapp-business-calling`,
+      lastModified: currentDate,
+      changeFrequency: "weekly",
+      priority: 0.9,
+    },
+    {
       url: `${baseUrl}/chatbot-flows`,
       lastModified: currentDate,
       changeFrequency: "weekly",
