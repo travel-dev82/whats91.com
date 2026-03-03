@@ -337,7 +337,7 @@ export async function GET(
         url: `${siteConfig.url}/blog/${post.slug}`,
         title: post.title,
         description: post.excerpt,
-        updated_at: new Date(post.updatedAt || post.publishedAt).toISOString().split("T")[0],
+        updated_at: post.publishedAt,
         language: "en",
         sections: [
           {
@@ -347,9 +347,9 @@ export async function GET(
             keywords: post.seo.keywords,
           },
           {
-            id: `blog-${post.slug}__content`,
-            heading: "Full Content",
-            content: post.content.replace(/<[^>]*>/g, "").substring(0, 3000), // Strip HTML, limit length
+            id: `blog-${post.slug}__tags`,
+            heading: "Topics Covered",
+            content: `This article covers: ${post.tags.join(", ")}. Category: ${post.category}. Reading time: ${post.readingTime} minutes.`,
             keywords: post.seo.keywords,
           },
         ],
