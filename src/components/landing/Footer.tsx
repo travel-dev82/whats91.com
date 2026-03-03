@@ -42,6 +42,7 @@ const footerLinks = {
     { label: "Co-Existing Mode", href: "/whatsapp-coexistence" },
     { label: "Free Tools", href: "/tools" },
     { label: "Blog", href: "/blog" },
+    { label: "FAQ", href: "/faq" },
   ],
   company: [
     { label: "About Us", href: "/about" },
