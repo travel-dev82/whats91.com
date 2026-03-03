@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { 
   Home, 
@@ -133,10 +134,13 @@ export default function NotFound() {
       <footer className="py-6 border-t border-border/40">
         <div className="px-4 sm:px-6 lg:px-8 max-w-[1200px] mx-auto text-center">
           <Link href="/" className="inline-flex items-center gap-2 mb-3">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-primary shadow-md shadow-brand-primary/20">
-              <MessageCircle className="h-4 w-4 text-brand-primary-foreground" />
-            </div>
-            <span className="text-lg font-semibold text-text-primary">Whats91</span>
+            <Image
+              src="/whats91_logo.svg"
+              alt="Whats91 Logo"
+              width={100}
+              height={28}
+              className="h-7 w-auto"
+            />
           </Link>
           <p className="text-xs text-text-muted">
             © {new Date().getFullYear()} Whats91. All rights reserved. 

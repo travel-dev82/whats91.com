@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { MessageCircle, Mail, MapPin, Phone, Tag } from "lucide-react";
+import Image from "next/image";
+import { Mail, MapPin, Phone, Tag } from "lucide-react";
 import { BookDemoPopup } from "@/components/landing/BookDemoPopup";
 
 // WhatsApp logo component
@@ -77,11 +78,14 @@ export function Footer() {
           
           {/* Brand Column */}
           <div className="lg:col-span-2 text-center sm:text-left">
-            <Link href="/" className="inline-flex items-center gap-2.5 mb-4 group">
-              <div className="flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-lg bg-brand-primary shadow-md shadow-brand-primary/20 transition-transform duration-300 group-hover:scale-105">
-                <MessageCircle className="h-4 w-4 sm:h-5 sm:w-5 text-brand-primary-foreground" />
-              </div>
-              <span className="text-lg sm:text-xl font-semibold text-text-primary tracking-tight">Whats91</span>
+            <Link href="/" className="inline-flex items-center gap-2 mb-4 group">
+              <Image
+                src="/whats91_logo.svg"
+                alt="Whats91 Logo"
+                width={100}
+                height={28}
+                className="h-7 sm:h-8 w-auto transition-transform duration-300 group-hover:scale-105"
+              />
             </Link>
             <p className="text-xs sm:text-sm text-text-secondary mb-6 max-w-xs mx-auto sm:mx-0 leading-relaxed">
               India&apos;s leading WhatsApp Cloud API platform for enterprise communication. Official Business Solution Provider.

@@ -16,7 +16,6 @@ import {
 import {
   Menu,
   X,
-  MessageCircle,
   ChevronRight,
   Megaphone,
   Settings,
@@ -27,6 +26,7 @@ import {
   Zap,
   Wrench
 } from "lucide-react";
+import Image from "next/image";
 import { cn } from "@/lib/utils";
 
 // Solution menu items for dropdown
@@ -93,18 +93,18 @@ export function Header() {
       <div className="px-4 sm:px-6 lg:px-8 max-w-[1200px] mx-auto">
         <div className="flex h-14 sm:h-16 items-center justify-between">
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-2.5 shrink-0 group">
-            <div className="flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center rounded-lg bg-brand-primary shadow-md shadow-brand-primary/20 transition-transform duration-300 group-hover:scale-105">
-              <MessageCircle className="h-4 w-4 sm:h-5 sm:w-5 text-brand-primary-foreground" />
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="text-lg sm:text-xl font-semibold text-text-primary tracking-tight">
-                Whats91
-              </span>
-              <span className="hidden sm:inline-flex items-center rounded-full bg-brand-primary-light px-2.5 py-0.5 text-[10px] font-medium text-brand-primary border border-brand-primary/10">
-                Meta Partner
-              </span>
-            </div>
+          <Link href="/" className="flex items-center gap-2 shrink-0 group">
+            <Image
+              src="/whats91_logo.svg"
+              alt="Whats91 Logo"
+              width={100}
+              height={28}
+              className="h-6 sm:h-7 w-auto transition-transform duration-300 group-hover:scale-105"
+              priority
+            />
+            <span className="hidden sm:inline-flex items-center rounded-full bg-brand-primary-light px-2.5 py-0.5 text-[10px] font-medium text-brand-primary border border-brand-primary/10">
+              Meta Partner
+            </span>
           </Link>
 
           {/* Desktop Navigation */}
@@ -180,11 +180,14 @@ export function Header() {
             >
               {/* Mobile Menu Header */}
               <div className="flex items-center justify-between p-4 border-b border-border/60">
-                <Link href="/" className="flex items-center gap-2.5" onClick={() => setIsOpen(false)}>
-                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-primary shadow-md shadow-brand-primary/20">
-                    <MessageCircle className="h-4 w-4 text-brand-primary-foreground" />
-                  </div>
-                  <span className="text-lg font-semibold text-text-primary">Whats91</span>
+                <Link href="/" className="flex items-center gap-2" onClick={() => setIsOpen(false)}>
+                  <Image
+                    src="/whats91_logo.svg"
+                    alt="Whats91 Logo"
+                    width={90}
+                    height={25}
+                    className="h-6 w-auto"
+                  />
                 </Link>
                 <SheetClose asChild>
                   <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-surface">
