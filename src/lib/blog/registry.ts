@@ -16,6 +16,7 @@ export interface BlogPostMeta {
   excerpt: string;
   category: string;
   tags: string[];
+  authorId: string;
   publishedAt: string;
   readingTime: number;
   isFeatured: boolean;
@@ -35,6 +36,7 @@ export const blogPosts: BlogPostMeta[] = [
     excerpt: "How the new 6-hour logout rule affects unofficial WhatsApp APIs, and a complete guide to migrating to the official WhatsApp Cloud API with co-existing or brand name options.",
     category: "WhatsApp API",
     tags: ["WhatsApp API", "Cloud API", "Unofficial API", "Migration", "6-Hour Rule", "Official API"],
+    authorId: "2",
     publishedAt: "2026-02-28",
     readingTime: 12,
     isFeatured: true,
@@ -51,6 +53,7 @@ export const blogPosts: BlogPostMeta[] = [
     excerpt: "India's new DoT directive mandates automatic logout for WhatsApp Web and desktop sessions every 6 hours. Here's what your business needs to know and how to adapt.",
     category: "Industry Insights",
     tags: ["WhatsApp Web", "Compliance", "Security", "India", "Best Practices"],
+    authorId: "3",
     publishedAt: "2026-02-26",
     readingTime: 10,
     isFeatured: true,
@@ -67,6 +70,7 @@ export const blogPosts: BlogPostMeta[] = [
     excerpt: "Everything you need to know about implementing WhatsApp Cloud API for your business. From setup to scaling, learn how to leverage the official Meta platform for enterprise communication.",
     category: "WhatsApp API",
     tags: ["WhatsApp Cloud API", "Enterprise", "Best Practices", "India"],
+    authorId: "1",
     publishedAt: "2026-01-15",
     readingTime: 12,
     isFeatured: true,
@@ -83,6 +87,7 @@ export const blogPosts: BlogPostMeta[] = [
     excerpt: "Discover how integrating WhatsApp with Busy Accounting Software automates invoice delivery, payment reminders, and customer inquiries. Real examples from Indian businesses.",
     category: "ERP Integration",
     tags: ["Busy Accounting", "ERP Integration", "Automation", "Chatbot"],
+    authorId: "2",
     publishedAt: "2026-01-10",
     readingTime: 8,
     isFeatured: false,
@@ -137,6 +142,12 @@ export function getAllTags(): string[] {
   const tags = new Set<string>();
   blogPosts.forEach((post) => post.tags.forEach((tag) => tags.add(tag)));
   return Array.from(tags);
+}
+
+export function getPostsByAuthor(authorId: string): BlogPostMeta[] {
+  return blogPosts
+    .filter((post) => post.authorId === authorId)
+    .sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime());
 }
 
 // Category colors for badges

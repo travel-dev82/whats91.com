@@ -1,14 +1,19 @@
 "use client";
 
 import Link from "next/link";
-import { Calendar, Clock, ArrowRight, Tag, BookOpen } from "lucide-react";
+import { Calendar, Clock, ArrowRight, Tag, BookOpen, User } from "lucide-react";
 import { BlogPostMeta } from "@/lib/blog/registry";
+import { getAuthorById } from "@/lib/blog/authors";
 
 interface BlogCardProps {
   post: BlogPostMeta;
+  showAuthor?: boolean;
+  variant?: "default" | "compact";
 }
 
-export function BlogCard({ post }: BlogCardProps) {
+export function BlogCard({ post, showAuthor = true, variant = "default" }: BlogCardProps) {
+  const author = getAuthorById(post.authorId);
+  
   const categoryStyles: Record<string, { bg: string; text: string; border: string }> = {
     "WhatsApp API": { bg: "bg-green-50", text: "text-green-700", border: "border-green-200" },
     "ERP Integration": { bg: "bg-blue-50", text: "text-blue-700", border: "border-blue-200" },
@@ -93,12 +98,26 @@ export function BlogCard({ post }: BlogCardProps) {
               )}
             </div>
 
-            {/* Footer: Date & Read More */}
+            {/* Footer: Author & Date & Read More */}
             <div className="flex items-center justify-between pt-3 border-t border-border/40">
-              <span className="flex items-center gap-1.5 text-[10px] sm:text-xs text-text-muted">
-                <Calendar className="h-3 w-3" />
-                {formattedDate}
-              </span>
+              <div className="flex items-center gap-2">
+                {showAuthor && author && (
+                  <Link 
+                    href={`/authors/${author.slug}`}
+                    className="flex items-center gap-1.5 text-[10px] sm:text-xs text-text-muted hover:text-brand-primary transition-colors"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <User className="h-3 w-3" />
+                    {author.name}
+                  </Link>
+                )}
+                {!showAuthor && (
+                  <span className="flex items-center gap-1.5 text-[10px] sm:text-xs text-text-muted">
+                    <Calendar className="h-3 w-3" />
+                    {formattedDate}
+                  </span>
+                )}
+              </div>
               <span className="flex items-center gap-1 text-xs font-medium text-brand-primary group-hover:gap-2 transition-all duration-200">
                 Read
                 <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />

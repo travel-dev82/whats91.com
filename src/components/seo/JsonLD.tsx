@@ -203,3 +203,56 @@ export function SEOJsonLD() {
     </>
   );
 }
+
+// Person JSON-LD for Author Pages
+interface PersonJsonLDProps {
+  name: string;
+  url: string;
+  jobTitle?: string;
+  description?: string;
+  image?: string;
+  sameAs?: string[];
+  worksFor?: {
+    name: string;
+    url: string;
+  };
+  knowsAbout?: string[];
+}
+
+export function PersonJsonLD({
+  name,
+  url,
+  jobTitle,
+  description,
+  image,
+  sameAs,
+  worksFor,
+  knowsAbout,
+}: PersonJsonLDProps) {
+  const jsonLd: Record<string, unknown> = {
+    "@context": "https://schema.org",
+    "@type": "Person",
+    name,
+    url,
+  };
+
+  if (jobTitle) jsonLd.jobTitle = jobTitle;
+  if (description) jsonLd.description = description;
+  if (image) jsonLd.image = image;
+  if (sameAs && sameAs.length > 0) jsonLd.sameAs = sameAs;
+  if (worksFor) {
+    jsonLd.worksFor = {
+      "@type": "Organization",
+      name: worksFor.name,
+      url: worksFor.url,
+    };
+  }
+  if (knowsAbout && knowsAbout.length > 0) jsonLd.knowsAbout = knowsAbout;
+
+  return (
+    <script
+      type="application/ld+json"
+      dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+    />
+  );
+}

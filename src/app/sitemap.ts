@@ -1,6 +1,7 @@
 import { MetadataRoute } from "next";
 import { siteConfig } from "@/lib/seo/config";
 import { getAllPosts } from "@/lib/blog";
+import { getAllAuthors } from "@/lib/blog/authors";
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const baseUrl = siteConfig.url;
@@ -8,6 +9,9 @@ export default function sitemap(): MetadataRoute.Sitemap {
 
   // Get all blog posts dynamically
   const blogPosts = getAllPosts();
+  
+  // Get all authors
+  const authors = getAllAuthors();
 
   // ============================================
   // STATIC PAGES - Core website pages
@@ -319,6 +323,24 @@ export default function sitemap(): MetadataRoute.Sitemap {
   }));
 
   // ============================================
+  // AUTHOR PAGES
+  // ============================================
+  const authorPages: MetadataRoute.Sitemap = [
+    {
+      url: `${baseUrl}/authors`,
+      lastModified: currentDate,
+      changeFrequency: "weekly",
+      priority: 0.8,
+    },
+    ...authors.map((author) => ({
+      url: `${baseUrl}/authors/${author.slug}`,
+      lastModified: new Date(author.joinedAt).toISOString(),
+      changeFrequency: "monthly" as const,
+      priority: 0.7,
+    })),
+  ];
+
+  // ============================================
   // COMBINE ALL PAGES
   // ============================================
   return [
@@ -328,6 +350,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     ...toolsPages,
     ...resourcePages,
     ...legalPages,
+    ...authorPages,
     ...aiOptimizedRoutes,
     ...blogMarkdownTwins,
   ];
