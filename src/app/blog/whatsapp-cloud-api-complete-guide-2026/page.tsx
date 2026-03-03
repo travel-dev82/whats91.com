@@ -610,16 +610,16 @@ export default function WhatsAppCloudAPIGuidePage() {
                 <CardContent className="p-6 sm:p-8">
                   <div className="flex flex-col sm:flex-row items-start gap-6">
                     <img
-                      src="https://ui-avatars.com/api/?name=Whats91+Team&background=25D366&color=fff&size=128"
-                      alt="Whats91 Team"
+                      src="https://ui-avatars.com/api/?name=Devendar+Singh+Gohil&background=448C74&color=fff&size=128"
+                      alt="Devendar Singh Gohil"
                       className="w-16 h-16 rounded-full"
                     />
                     <div className="flex-1">
                       <p className="text-sm text-text-muted mb-1">Written by</p>
-                      <h4 className="font-semibold text-text-primary text-lg">Whats91 Team</h4>
-                      <p className="text-sm text-brand-primary mb-3">WhatsApp Cloud API Experts</p>
+                      <h4 className="font-semibold text-text-primary text-lg">Devendar Singh Gohil</h4>
+                      <p className="text-sm text-brand-primary mb-3">Developer</p>
                       <p className="text-sm text-text-secondary leading-relaxed">
-                        The Whats91 team specializes in helping Indian businesses implement WhatsApp Cloud API for enterprise communication, ERP integration, and customer engagement.
+                        Lead Developer at Whats91 specializing in WhatsApp Cloud API integration, enterprise software development, and ERP solutions including Busy Accounting integrations.
                       </p>
                     </div>
                   </div>

@@ -15,8 +15,6 @@ import {
 } from "@/components/ui/navigation-menu";
 import {
   Menu,
-  X,
-  ChevronRight,
   Megaphone,
   Settings,
   Database,
@@ -24,7 +22,6 @@ import {
   CreditCard,
   Sheet as SheetIcon,
   Zap,
-  Wrench
 } from "lucide-react";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
@@ -179,7 +176,7 @@ export function Header() {
               className="w-[85vw] sm:w-[320px] bg-background/95 backdrop-blur-xl border-l border-border p-0"
             >
               {/* Mobile Menu Header */}
-              <div className="flex items-center justify-between p-4 border-b border-border/60">
+              <div className="flex items-center p-4 border-b border-border/60">
                 <Link href="/" className="flex items-center gap-2" onClick={() => setIsOpen(false)}>
                   <Image
                     src="/whats91_logo.svg"
@@ -189,11 +186,6 @@ export function Header() {
                     className="h-6 w-auto"
                   />
                 </Link>
-                <SheetClose asChild>
-                  <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-surface">
-                    <X className="h-4 w-4 text-text-primary" />
-                  </Button>
-                </SheetClose>
               </div>
 
               {/* Mobile Navigation Links */}
@@ -212,7 +204,6 @@ export function Header() {
                     >
                       <solution.icon className="h-4 w-4 text-brand-primary" />
                       {solution.title}
-                      <ChevronRight className="h-4 w-4 text-text-muted ml-auto" />
                     </Link>
                   </SheetClose>
                 ))}
@@ -225,10 +216,9 @@ export function Header() {
                   <SheetClose key={item.label} asChild>
                     <Link
                       href={item.href}
-                      className="flex items-center justify-between py-2.5 px-3 text-base font-medium text-text-secondary transition-all duration-200 hover:text-text-primary hover:bg-surface rounded-lg"
+                      className="flex items-center py-2.5 px-3 text-base font-medium text-text-secondary transition-all duration-200 hover:text-text-primary hover:bg-surface rounded-lg"
                     >
                       {item.label}
-                      <ChevronRight className="h-4 w-4 text-text-muted" />
                     </Link>
                   </SheetClose>
                 ))}
