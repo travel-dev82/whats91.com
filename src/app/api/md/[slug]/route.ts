@@ -332,6 +332,131 @@ Contact for custom pricing based on:
 - 99.9% uptime SLA
 `,
     },
+    "google-sheets-integration": {
+      title: "WhatsApp Campaign to Google Sheets Integration",
+      description: "Automatically sync WhatsApp campaign responses to Google Sheets. Capture button replies and push data in real-time.",
+      keywords: ["Google Sheets", "WhatsApp Integration", "Campaign Responses", "Real-Time Sync", "Automation"],
+      content: `
+## Overview
+
+Every button click—Interested, Not Interested, Learn More—is automatically captured and pushed to Google Sheets in real-time. No manual exports, no delays.
+
+## How It Works
+
+1. Create campaign with interactive buttons
+2. Connect Google Sheet and map columns
+3. Launch campaign to audience
+4. Platform captures button responses via webhooks
+5. Auto-push to configured sheet
+6. Use Zapier/Make for further automation
+
+## Button Response Types
+
+- **Interested**: Customer expresses interest (Lead Score: High)
+- **Not Interested**: Customer declines (Lead Score: Low)
+- **Learn More**: Customer wants info (Lead Score: Medium)
+- **Call Me**: Callback request (Priority: High)
+
+## Data Fields Captured
+
+- phone_number
+- timestamp
+- campaign_id
+- template_name
+- button_id
+- button_text
+- message_id
+- custom_fields (JSON)
+
+## Use Cases
+
+- **Lead Qualification**: 3x faster lead response time
+- **Event RSVPs**: 85% response rate
+- **Customer Surveys**: 60% higher completion
+- **Order Confirmations**: 90% confirmation rate
+
+## Features
+
+- Real-time sync (1-3 seconds)
+- Custom column mapping
+- Multi-sheet support
+- Webhook backup
+- Data validation
+`,
+    },
+    "chatbot-flows": {
+      title: "ERP Chatbot Flow Library",
+      description: "Pre-built conversational flows for Busy Accounting Software integration. Automate sales, purchases, payments, and more.",
+      keywords: ["Chatbot Flows", "ERP Automation", "Busy Accounting", "WhatsApp Chatbot", "Pre-built Flows"],
+      content: `
+## Flow Library Overview
+
+14+ pre-built chatbot flows for ERP automation across 8 categories.
+
+## Categories
+
+### Sales Invoice
+- Invoice creation and delivery
+- Payment tracking
+- Due date reminders
+
+### Sales Order
+- Order processing
+- Fulfillment updates
+- Status tracking
+
+### Sales Return
+- Returns handling
+- Credit notes
+- Refund processing
+
+### Purchase
+- PO automation
+- Vendor communication
+- Inventory updates
+
+### Payments
+- Payment reminders
+- Confirmation messages
+- Receipt delivery
+
+### Receipts
+- Delivery acknowledgment
+- Confirmation messages
+- Status updates
+
+### Ledgers
+- Balance queries
+- Statement generation
+- Account summaries
+
+### Reports
+- Automated delivery
+- On-demand reports
+- Scheduled summaries
+
+## Flow Structure
+
+Each flow contains:
+- Trigger event (webhook/message)
+- Processing steps (API calls, conditions)
+- Message templates
+- Integration endpoints
+
+## Integration Points
+
+- Busy API for data retrieval
+- WhatsApp Cloud API for messaging
+- PDF Generator for documents
+- Scheduler for timed triggers
+
+## Complexity Levels
+
+- **Basic**: Simple query-response flows
+- **Intermediate**: Multi-step with conditions
+- **Advanced**: Complex branching with integrations
+`,
+    },
   };
 
   const page = staticPages[slug];
@@ -340,12 +465,23 @@ Contact for custom pricing based on:
   return {
     title: page.title!,
     description: page.description!,
-    url: `${baseUrl}/${slug}`,
+    url: `${baseUrl}/${slug === "busy-erp" ? "solutions/busy-erp" : slug}`,
     lastModified: new Date().toISOString(),
     keywords: page.keywords || [],
     content: page.content || "",
   };
 }
+
+// List of available slugs for 404 response
+const availableSlugs = [
+  "busy-erp",
+  "whatsapp-templates",
+  "whatsapp-coexistence",
+  "tools",
+  "pricing",
+  "google-sheets-integration",
+  "chatbot-flows",
+];
 
 export async function GET(
   request: Request,
@@ -368,7 +504,7 @@ export async function GET(
         lastModified: new Date(post.updatedAt || post.publishedAt).toISOString(),
         keywords: post.seo.keywords,
         category: post.category,
-        content: post.content,
+        content: post.content || "",
       };
     }
   } else {
@@ -377,9 +513,20 @@ export async function GET(
   }
 
   if (!page) {
+    // Return JSON 404 with available pages
     return NextResponse.json(
-      { error: "Page not found" },
-      { status: 404 }
+      { 
+        error: "Page not found",
+        slug: slug,
+        available_pages: availableSlugs,
+        hint: "Use one of the available page slugs, or prefix blog posts with 'blog-' (e.g., 'blog-whatsapp-cloud-api-complete-guide-2026')"
+      },
+      { 
+        status: 404,
+        headers: {
+          "Content-Type": "application/json",
+        }
+      }
     );
   }
 
