@@ -79,6 +79,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
   // ============================================
   const solutionsPages: MetadataRoute.Sitemap = [
     {
+      url: `${baseUrl}/flow-builder`,
+      lastModified: currentDate,
+      changeFrequency: "weekly",
+      priority: 0.95,
+    },
+    {
       url: `${baseUrl}/solutions/busy-erp`,
       lastModified: currentDate,
       changeFrequency: "weekly",

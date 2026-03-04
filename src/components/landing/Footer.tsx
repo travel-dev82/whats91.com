@@ -22,9 +22,10 @@ function WhatsAppIcon({ className }: { className?: string }) {
 
 const footerLinks = {
   solutions: [
+    { label: "Flow Builder", href: "/flow-builder", featured: true },
     { label: "Marketing & Engagement", href: "/solutions/marketing" },
     { label: "Utility Messages", href: "/solutions/utility" },
-    { label: "Busy ERP Integration", href: "/solutions/busy-erp", featured: true },
+    { label: "Busy ERP Integration", href: "/solutions/busy-erp" },
     { label: "Busy API", href: "/solutions/busy-api" },
     { label: "Busy Reports", href: "/solutions/busy-reports" },
     { label: "Payment Reminders", href: "/solutions/payment-reminders" },
