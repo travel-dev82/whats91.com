@@ -39,7 +39,9 @@ import {
   Sparkles,
   Clock,
   Users,
-  Target
+  Target,
+  Calendar,
+  Tag
 } from "lucide-react";
 
 // BotMaster Flow JSON Types (based on schema)
@@ -1698,9 +1700,6 @@ const flowLibrary: FlowLibraryItem[] = [
   }
 ];
 
-// Missing Calendar import
-const Calendar = Building2;
-
 // Node type icons and colors
 const nodeTypeConfig: Record<string, { icon: React.ElementType; color: string; bgColor: string; label: string }> = {
   "trigger.inbound_message": { icon: Zap, color: "text-yellow-600", bgColor: "bg-yellow-50", label: "Trigger" },
@@ -1711,14 +1710,6 @@ const nodeTypeConfig: Record<string, { icon: React.ElementType; color: string; b
   "control.wait": { icon: Pause, color: "text-orange-600", bgColor: "bg-orange-50", label: "Wait" },
   "control.end": { icon: CheckCircle2, color: "text-emerald-600", bgColor: "bg-emerald-50", label: "End" },
 };
-
-// Tag icon component
-const Tag = ({ className }: { className?: string }) => (
-  <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M12 2H2v10l9.29 9.29c.94.94 2.48.94 3.42 0l6.58-6.58c.94-.94.94-2.48 0-3.42L12 2Z" />
-    <path d="M7 7h.01" />
-  </svg>
-);
 
 // Complexity badge colors
 const complexityColors: Record<string, string> = {
