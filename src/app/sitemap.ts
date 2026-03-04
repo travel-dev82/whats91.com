@@ -305,6 +305,18 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: "weekly",
       priority: 0.5,
     },
+    {
+      url: `${baseUrl}/api/md/google-sheets-integration`,
+      lastModified: currentDate,
+      changeFrequency: "weekly",
+      priority: 0.5,
+    },
+    {
+      url: `${baseUrl}/api/md/chatbot-flows`,
+      lastModified: currentDate,
+      changeFrequency: "weekly",
+      priority: 0.5,
+    },
     // MCP discovery endpoint
     {
       url: `${baseUrl}/api/mcp`,
