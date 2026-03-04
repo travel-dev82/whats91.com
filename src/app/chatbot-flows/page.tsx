@@ -34,400 +34,1691 @@ import {
   RefreshCw,
   DollarSign,
   Copy,
-  Check
+  Check,
+  Code,
+  Sparkles,
+  Clock,
+  Users,
+  Target
 } from "lucide-react";
 
-// Flow Step interface
-interface FlowStep {
-  id: string;
-  type: "trigger" | "condition" | "action" | "message" | "api_call" | "wait" | "end";
+// BotMaster Flow JSON Types (based on schema)
+interface FlowOutput {
+  key: string;
   label: string;
-  description: string;
-  config?: Record<string, string | number | boolean>;
-  nextSteps?: string[];
 }
 
-// Chatbot Flow interface
-interface ChatbotFlow {
+interface FlowButton {
+  id: string;
+  title: string;
+}
+
+interface FlowConfig {
+  match_mode?: "any" | "keyword";
+  keywords?: string[];
+  case_sensitive?: boolean;
+  body_text?: string;
+  header_text?: string;
+  footer_text?: string;
+  interactive_type?: "none" | "button" | "list";
+  buttons?: FlowButton[];
+  list_data?: null;
+  media_url?: string;
+  media_type?: string;
+  media_filename?: string;
+  rules?: Array<{
+    operator: string;
+    value: string;
+    branch: string;
+  }>;
+  key?: string;
+  value?: string;
+  tag?: string;
+  timeout_seconds?: number;
+  result?: "completed" | "handoff" | "stopped";
+}
+
+interface FlowNode {
+  id: string;
+  type: "trigger.inbound_message" | "message.compose" | "logic.condition" | "action.set_variable" | "action.tag_contact" | "control.wait" | "control.end";
+  position: { x: number; y: number };
+  data: {
+    label: string;
+    config: FlowConfig;
+    outputs: FlowOutput[];
+  };
+}
+
+interface FlowEdge {
+  id: string;
+  source: string;
+  target: string;
+  sourceHandle: string;
+  targetHandle: string;
+  condition: { type: string };
+  priority: number;
+}
+
+interface BotMasterFlow {
+  schema_version: string;
+  flow_uid: string;
+  entry_node_id: string;
+  meta: {
+    name: string;
+    description: string;
+  };
+  nodes: FlowNode[];
+  edges: FlowEdge[];
+  variables: Record<string, unknown>;
+  settings: {
+    max_hops_per_message: number;
+    fallback_behavior: string;
+    timezone: string;
+  };
+  ui: {
+    viewport: { x: number; y: number; zoom: number };
+  };
+}
+
+// Flow Library Item - includes metadata for UI
+interface FlowLibraryItem {
   id: string;
   name: string;
   category: string;
   description: string;
   useCase: string;
-  erpModule: string;
-  steps: FlowStep[];
-  triggers: string[];
-  integrations: string[];
-  estimatedTime: string;
   complexity: "basic" | "intermediate" | "advanced";
+  tags: string[];
+  flow: BotMasterFlow;
 }
 
 // Flow Categories
 const flowCategories = [
   {
-    id: "sales-invoice",
-    name: "Sales Invoice",
-    icon: FileText,
-    description: "Automate invoice creation, delivery, and payment tracking",
-    color: "text-blue-600",
-    bgColor: "bg-blue-50",
+    id: "welcome",
+    name: "Welcome",
+    icon: Sparkles,
+    description: "Greeting and onboarding flows for new conversations",
+    color: "text-emerald-600",
+    bgColor: "bg-emerald-50",
   },
   {
-    id: "sales-order",
-    name: "Sales Order",
+    id: "sales",
+    name: "Sales",
     icon: ShoppingCart,
-    description: "Streamline order processing and fulfillment workflows",
+    description: "Lead qualification and sales automation flows",
     color: "text-purple-600",
     bgColor: "bg-purple-50",
   },
   {
-    id: "sales-return",
-    name: "Sales Return",
-    icon: RefreshCw,
-    description: "Handle returns, credit notes, and refund processing",
-    color: "text-orange-600",
-    bgColor: "bg-orange-50",
+    id: "support",
+    name: "Support",
+    icon: MessageCircle,
+    description: "Customer support and ticket routing flows",
+    color: "text-blue-600",
+    bgColor: "bg-blue-50",
   },
   {
-    id: "purchase",
-    name: "Purchase",
+    id: "ecommerce",
+    name: "E-commerce",
     icon: Package,
-    description: "Automate purchase orders and vendor communications",
-    color: "text-teal-600",
-    bgColor: "bg-teal-50",
+    description: "Order management and cart recovery flows",
+    color: "text-orange-600",
+    bgColor: "bg-orange-50",
   },
   {
     id: "payments",
     name: "Payments",
     icon: DollarSign,
-    description: "Payment reminders, confirmations, and reconciliation",
+    description: "Payment reminders and confirmation flows",
     color: "text-green-600",
     bgColor: "bg-green-50",
   },
   {
-    id: "receipts",
-    name: "Receipts",
-    icon: Receipt,
-    description: "Receipt generation, delivery, and acknowledgment",
-    color: "text-indigo-600",
-    bgColor: "bg-indigo-50",
-  },
-  {
-    id: "ledgers",
-    name: "Ledgers",
-    icon: BookOpen,
-    description: "Party ledger queries and balance sharing",
-    color: "text-amber-600",
-    bgColor: "bg-amber-50",
-  },
-  {
-    id: "reports",
-    name: "Reports",
-    icon: BarChart3,
-    description: "Automated report delivery and on-demand queries",
-    color: "text-rose-600",
-    bgColor: "bg-rose-50",
+    id: "bookings",
+    name: "Bookings",
+    icon: Calendar,
+    description: "Appointment scheduling and reminders",
+    color: "text-teal-600",
+    bgColor: "bg-teal-50",
   },
 ];
 
-// Chatbot Flows Data
-const chatbotFlows: ChatbotFlow[] = [
-  // Sales Invoice Flows
+// Helper to generate timestamps for IDs
+const generateTimestamp = () => Date.now();
+
+// BotMaster Flow JSON Library - Following the schema exactly
+const flowLibrary: FlowLibraryItem[] = [
+  // WELCOME FLOWS
   {
-    id: "si-001",
-    name: "Invoice Created Notification",
-    category: "sales-invoice",
-    description: "Send WhatsApp notification when a new invoice is created in Busy",
-    useCase: "Instantly notify customers about their invoice with PDF attachment and payment link",
-    erpModule: "Sales > Invoice",
-    triggers: ["Webhook: Invoice.Created", "API: Manual Trigger"],
-    integrations: ["Busy API", "WhatsApp Cloud API", "PDF Generator"],
-    estimatedTime: "2-3 seconds",
+    id: "welcome-001",
+    name: "Simple Welcome Flow",
+    category: "welcome",
+    description: "Basic welcome message with quick reply options",
+    useCase: "Greet new users and offer main menu options",
     complexity: "basic",
-    steps: [
-      { id: "s1", type: "trigger", label: "Invoice Created Event", description: "Webhook received from Busy when invoice is created", config: { event: "invoice.created" }, nextSteps: ["s2"] },
-      { id: "s2", type: "action", label: "Fetch Invoice Details", description: "Retrieve complete invoice data from Busy API", config: { endpoint: "/api/invoice/{id}", method: "GET" }, nextSteps: ["s3"] },
-      { id: "s3", type: "action", label: "Generate PDF", description: "Create PDF version of the invoice", config: { template: "invoice_template_v1" }, nextSteps: ["s4"] },
-      { id: "s4", type: "message", label: "Send WhatsApp Message", description: "Send invoice notification with PDF attachment", config: { template: "invoice_notification", mediaType: "document" }, nextSteps: ["s5"] },
-      { id: "s5", type: "action", label: "Log Communication", description: "Record message delivery in communication log", config: { table: "communication_logs" }, nextSteps: ["s6"] },
-      { id: "s6", type: "end", label: "Flow Complete", description: "Process completed successfully", nextSteps: [] },
-    ],
+    tags: ["greeting", "onboarding", "menu"],
+    flow: {
+      schema_version: "1.0.0",
+      flow_uid: "welcome-simple-001",
+      entry_node_id: "n_1000_1",
+      meta: {
+        name: "Simple Welcome Flow",
+        description: "Basic greeting with menu options"
+      },
+      nodes: [
+        {
+          id: "n_1000_1",
+          type: "trigger.inbound_message",
+          position: { x: 100, y: 50 },
+          data: {
+            label: "Inbound Message",
+            config: {
+              match_mode: "keyword",
+              keywords: ["hi", "hello", "hey", "start"],
+              case_sensitive: false
+            },
+            outputs: [{ key: "out", label: "Match" }]
+          }
+        },
+        {
+          id: "n_1000_2",
+          type: "message.compose",
+          position: { x: 100, y: 200 },
+          data: {
+            label: "Welcome Message",
+            config: {
+              body_text: "Welcome to our WhatsApp service! How can we help you today?",
+              header_text: "Hello!",
+              footer_text: "Select an option",
+              interactive_type: "button",
+              buttons: [
+                { id: "btn_sales", title: "Sales" },
+                { id: "btn_support", title: "Support" },
+                { id: "btn_info", title: "Info" }
+              ],
+              list_data: null,
+              media_url: "",
+              media_type: "",
+              media_filename: ""
+            },
+            outputs: [
+              { key: "btn_sales", label: "Sales" },
+              { key: "btn_support", label: "Support" },
+              { key: "btn_info", label: "Info" }
+            ]
+          }
+        },
+        {
+          id: "n_1000_3",
+          type: "message.compose",
+          position: { x: 50, y: 400 },
+          data: {
+            label: "Sales Response",
+            config: {
+              body_text: "Great! Our sales team is here to help. Please share your requirements and we'll get back to you shortly.",
+              header_text: "",
+              footer_text: "",
+              interactive_type: "none",
+              buttons: [],
+              list_data: null,
+              media_url: "",
+              media_type: "",
+              media_filename: ""
+            },
+            outputs: [{ key: "out", label: "Next" }]
+          }
+        },
+        {
+          id: "n_1000_4",
+          type: "message.compose",
+          position: { x: 200, y: 400 },
+          data: {
+            label: "Support Response",
+            config: {
+              body_text: "We're here to help! Please describe your issue and our support team will assist you.",
+              header_text: "",
+              footer_text: "",
+              interactive_type: "none",
+              buttons: [],
+              list_data: null,
+              media_url: "",
+              media_type: "",
+              media_filename: ""
+            },
+            outputs: [{ key: "out", label: "Next" }]
+          }
+        },
+        {
+          id: "n_1000_5",
+          type: "message.compose",
+          position: { x: 350, y: 400 },
+          data: {
+            label: "Info Response",
+            config: {
+              body_text: "Here's information about our services. Visit our website or ask any specific question!",
+              header_text: "",
+              footer_text: "",
+              interactive_type: "none",
+              buttons: [],
+              list_data: null,
+              media_url: "",
+              media_type: "",
+              media_filename: ""
+            },
+            outputs: [{ key: "out", label: "Next" }]
+          }
+        },
+        {
+          id: "n_1000_6",
+          type: "control.end",
+          position: { x: 200, y: 600 },
+          data: {
+            label: "End",
+            config: { result: "completed" },
+            outputs: []
+          }
+        }
+      ],
+      edges: [
+        { id: "e_2000_1", source: "n_1000_1", target: "n_1000_2", sourceHandle: "out", targetHandle: "in", condition: { type: "always" }, priority: 0 },
+        { id: "e_2000_2", source: "n_1000_2", target: "n_1000_3", sourceHandle: "btn_sales", targetHandle: "in", condition: { type: "always" }, priority: 0 },
+        { id: "e_2000_3", source: "n_1000_2", target: "n_1000_4", sourceHandle: "btn_support", targetHandle: "in", condition: { type: "always" }, priority: 0 },
+        { id: "e_2000_4", source: "n_1000_2", target: "n_1000_5", sourceHandle: "btn_info", targetHandle: "in", condition: { type: "always" }, priority: 0 },
+        { id: "e_2000_5", source: "n_1000_3", target: "n_1000_6", sourceHandle: "out", targetHandle: "in", condition: { type: "always" }, priority: 0 },
+        { id: "e_2000_6", source: "n_1000_4", target: "n_1000_6", sourceHandle: "out", targetHandle: "in", condition: { type: "always" }, priority: 0 },
+        { id: "e_2000_7", source: "n_1000_5", target: "n_1000_6", sourceHandle: "out", targetHandle: "in", condition: { type: "always" }, priority: 0 }
+      ],
+      variables: {},
+      settings: {
+        max_hops_per_message: 20,
+        fallback_behavior: "legacy_advance_bot",
+        timezone: "Asia/Kolkata"
+      },
+      ui: {
+        viewport: { x: 0, y: 0, zoom: 1 }
+      }
+    }
   },
   {
-    id: "si-002",
-    name: "Payment Reminder Flow",
-    category: "sales-invoice",
-    description: "Automated payment reminders for overdue invoices",
-    useCase: "Send staged reminders (3 days, 7 days, 14 days) for unpaid invoices",
-    erpModule: "Sales > Outstanding",
-    triggers: ["Schedule: Daily 10:00 AM", "Manual Trigger"],
-    integrations: ["Busy API", "WhatsApp Cloud API", "Scheduler"],
-    estimatedTime: "1-2 seconds per reminder",
+    id: "welcome-002",
+    name: "Business Hours Welcome",
+    category: "welcome",
+    description: "Welcome message with business hours awareness",
+    useCase: "Greet users differently based on business hours",
     complexity: "intermediate",
-    steps: [
-      { id: "s1", type: "trigger", label: "Schedule Trigger", description: "Daily cron job checks for overdue invoices", config: { schedule: "0 10 * * *" }, nextSteps: ["s2"] },
-      { id: "s2", type: "action", label: "Query Overdue Invoices", description: "Fetch invoices overdue by configured days", config: { query: "overdue_days: 3,7,14" }, nextSteps: ["s3"] },
-      { id: "s3", type: "condition", label: "Check Reminder Stage", description: "Determine which reminder stage applies", config: { conditions: ["3_days", "7_days", "14_days"] }, nextSteps: ["s4", "s5", "s6"] },
-      { id: "s4", type: "message", label: "Send Gentle Reminder", description: "First reminder - polite payment request", config: { template: "payment_reminder_1" }, nextSteps: ["s7"] },
-      { id: "s5", type: "message", label: "Send Follow-up Reminder", description: "Second reminder - urgent payment request", config: { template: "payment_reminder_2" }, nextSteps: ["s7"] },
-      { id: "s6", type: "message", label: "Send Final Notice", description: "Final reminder before escalation", config: { template: "payment_reminder_3" }, nextSteps: ["s7"] },
-      { id: "s7", type: "action", label: "Update Reminder Log", description: "Record reminder sent in invoice history", config: { table: "invoice_reminders" }, nextSteps: ["s8"] },
-      { id: "s8", type: "end", label: "Flow Complete", description: "Reminder cycle completed", nextSteps: [] },
-    ],
-  },
-  {
-    id: "si-003",
-    name: "Invoice Query Bot",
-    category: "sales-invoice",
-    description: "Interactive bot for customers to query invoice status",
-    useCase: "Customer sends invoice number, bot returns status, amount, and due date",
-    erpModule: "Sales > Invoice",
-    triggers: ["WhatsApp Message: Invoice Query", "Keyword: INV"],
-    integrations: ["Busy API", "WhatsApp Cloud API", "NLP Engine"],
-    estimatedTime: "1-2 seconds",
-    complexity: "intermediate",
-    steps: [
-      { id: "s1", type: "trigger", label: "Message Received", description: "Customer sends invoice query via WhatsApp", config: { keywords: ["INV", "Invoice", "Bill"] }, nextSteps: ["s2"] },
-      { id: "s2", type: "action", label: "Extract Invoice Number", description: "Parse message to find invoice number", config: { regex: "INV-\\d{6}" }, nextSteps: ["s3"] },
-      { id: "s3", type: "api_call", label: "Fetch Invoice Status", description: "Query Busy API for invoice details", config: { endpoint: "/api/invoice/{number}" }, nextSteps: ["s4"] },
-      { id: "s4", type: "condition", label: "Invoice Found?", description: "Check if invoice exists in system", config: { onNotFound: "send_error" }, nextSteps: ["s5", "s6"] },
-      { id: "s5", type: "message", label: "Send Invoice Details", description: "Return formatted invoice information", config: { template: "invoice_status_response" }, nextSteps: ["s7"] },
-      { id: "s6", type: "message", label: "Send Not Found Error", description: "Inform customer invoice not found", config: { template: "invoice_not_found" }, nextSteps: ["s7"] },
-      { id: "s7", type: "end", label: "Query Resolved", description: "Customer query handled", nextSteps: [] },
-    ],
+    tags: ["greeting", "business-hours", "scheduling"],
+    flow: {
+      schema_version: "1.0.0",
+      flow_uid: "welcome-hours-002",
+      entry_node_id: "n_2000_1",
+      meta: {
+        name: "Business Hours Welcome",
+        description: "Time-aware greeting flow"
+      },
+      nodes: [
+        {
+          id: "n_2000_1",
+          type: "trigger.inbound_message",
+          position: { x: 100, y: 50 },
+          data: {
+            label: "Inbound Message",
+            config: {
+              match_mode: "any",
+              keywords: [],
+              case_sensitive: false
+            },
+            outputs: [{ key: "out", label: "Match" }]
+          }
+        },
+        {
+          id: "n_2000_2",
+          type: "message.compose",
+          position: { x: 100, y: 200 },
+          data: {
+            label: "Welcome Message",
+            config: {
+              body_text: "Thank you for contacting us! Our team will respond shortly. Meanwhile, how can we assist you?",
+              header_text: "Welcome!",
+              footer_text: "Choose an option",
+              interactive_type: "button",
+              buttons: [
+                { id: "btn_products", title: "Products" },
+                { id: "btn_support", title: "Support" },
+                { id: "btn_callback", title: "Call Back" }
+              ],
+              list_data: null,
+              media_url: "",
+              media_type: "",
+              media_filename: ""
+            },
+            outputs: [
+              { key: "btn_products", label: "Products" },
+              { key: "btn_support", label: "Support" },
+              { key: "btn_callback", label: "Call Back" }
+            ]
+          }
+        },
+        {
+          id: "n_2000_3",
+          type: "action.tag_contact",
+          position: { x: 100, y: 380 },
+          data: {
+            label: "Tag as New Contact",
+            config: { tag: "new-conversation" },
+            outputs: [{ key: "out", label: "Next" }]
+          }
+        },
+        {
+          id: "n_2000_4",
+          type: "control.end",
+          position: { x: 100, y: 520 },
+          data: {
+            label: "End",
+            config: { result: "completed" },
+            outputs: []
+          }
+        }
+      ],
+      edges: [
+        { id: "e_3000_1", source: "n_2000_1", target: "n_2000_2", sourceHandle: "out", targetHandle: "in", condition: { type: "always" }, priority: 0 },
+        { id: "e_3000_2", source: "n_2000_2", target: "n_2000_3", sourceHandle: "btn_products", targetHandle: "in", condition: { type: "always" }, priority: 0 },
+        { id: "e_3000_3", source: "n_2000_2", target: "n_2000_3", sourceHandle: "btn_support", targetHandle: "in", condition: { type: "always" }, priority: 0 },
+        { id: "e_3000_4", source: "n_2000_2", target: "n_2000_3", sourceHandle: "btn_callback", targetHandle: "in", condition: { type: "always" }, priority: 0 },
+        { id: "e_3000_5", source: "n_2000_3", target: "n_2000_4", sourceHandle: "out", targetHandle: "in", condition: { type: "always" }, priority: 0 }
+      ],
+      variables: {},
+      settings: {
+        max_hops_per_message: 20,
+        fallback_behavior: "legacy_advance_bot",
+        timezone: "Asia/Kolkata"
+      },
+      ui: {
+        viewport: { x: 0, y: 0, zoom: 1 }
+      }
+    }
   },
 
-  // Sales Order Flows
+  // SALES FLOWS
   {
-    id: "so-001",
+    id: "sales-001",
+    name: "Lead Qualification Flow",
+    category: "sales",
+    description: "Qualify leads with automated questions",
+    useCase: "Automatically qualify incoming leads based on budget, timeline, and interest",
+    complexity: "intermediate",
+    tags: ["lead-gen", "qualification", "crm"],
+    flow: {
+      schema_version: "1.0.0",
+      flow_uid: "sales-qualify-001",
+      entry_node_id: "n_3000_1",
+      meta: {
+        name: "Lead Qualification Flow",
+        description: "Automated lead scoring and qualification"
+      },
+      nodes: [
+        {
+          id: "n_3000_1",
+          type: "trigger.inbound_message",
+          position: { x: 100, y: 50 },
+          data: {
+            label: "Inbound Message",
+            config: {
+              match_mode: "keyword",
+              keywords: ["quote", "pricing", "price", "buy", "purchase"],
+              case_sensitive: false
+            },
+            outputs: [{ key: "out", label: "Match" }]
+          }
+        },
+        {
+          id: "n_3000_2",
+          type: "message.compose",
+          position: { x: 100, y: 200 },
+          data: {
+            label: "Ask Product Interest",
+            config: {
+              body_text: "Great! I'd love to help you find the right solution. What are you looking for?",
+              header_text: "Product Inquiry",
+              footer_text: "Select category",
+              interactive_type: "button",
+              buttons: [
+                { id: "btn_enterprise", title: "Enterprise" },
+                { id: "btn_smb", title: "Business" },
+                { id: "btn_individual", title: "Individual" }
+              ],
+              list_data: null,
+              media_url: "",
+              media_type: "",
+              media_filename: ""
+            },
+            outputs: [
+              { key: "btn_enterprise", label: "Enterprise" },
+              { key: "btn_smb", label: "Business" },
+              { key: "btn_individual", label: "Individual" }
+            ]
+          }
+        },
+        {
+          id: "n_3000_3",
+          type: "action.set_variable",
+          position: { x: 50, y: 400 },
+          data: {
+            label: "Set Lead Type",
+            config: { key: "lead_type", value: "enterprise" },
+            outputs: [{ key: "out", label: "Next" }]
+          }
+        },
+        {
+          id: "n_3000_4",
+          type: "action.set_variable",
+          position: { x: 200, y: 400 },
+          data: {
+            label: "Set Lead Type",
+            config: { key: "lead_type", value: "smb" },
+            outputs: [{ key: "out", label: "Next" }]
+          }
+        },
+        {
+          id: "n_3000_5",
+          type: "action.set_variable",
+          position: { x: 350, y: 400 },
+          data: {
+            label: "Set Lead Type",
+            config: { key: "lead_type", value: "individual" },
+            outputs: [{ key: "out", label: "Next" }]
+          }
+        },
+        {
+          id: "n_3000_6",
+          type: "action.tag_contact",
+          position: { x: 200, y: 550 },
+          data: {
+            label: "Tag as Lead",
+            config: { tag: "qualified-lead" },
+            outputs: [{ key: "out", label: "Next" }]
+          }
+        },
+        {
+          id: "n_3000_7",
+          type: "message.compose",
+          position: { x: 200, y: 700 },
+          data: {
+            label: "Thank You Message",
+            config: {
+              body_text: "Thank you for your interest! Our sales team will contact you within 24 hours with personalized recommendations.",
+              header_text: "",
+              footer_text: "",
+              interactive_type: "none",
+              buttons: [],
+              list_data: null,
+              media_url: "",
+              media_type: "",
+              media_filename: ""
+            },
+            outputs: [{ key: "out", label: "Next" }]
+          }
+        },
+        {
+          id: "n_3000_8",
+          type: "control.end",
+          position: { x: 200, y: 850 },
+          data: {
+            label: "End",
+            config: { result: "completed" },
+            outputs: []
+          }
+        }
+      ],
+      edges: [
+        { id: "e_4000_1", source: "n_3000_1", target: "n_3000_2", sourceHandle: "out", targetHandle: "in", condition: { type: "always" }, priority: 0 },
+        { id: "e_4000_2", source: "n_3000_2", target: "n_3000_3", sourceHandle: "btn_enterprise", targetHandle: "in", condition: { type: "always" }, priority: 0 },
+        { id: "e_4000_3", source: "n_3000_2", target: "n_3000_4", sourceHandle: "btn_smb", targetHandle: "in", condition: { type: "always" }, priority: 0 },
+        { id: "e_4000_4", source: "n_3000_2", target: "n_3000_5", sourceHandle: "btn_individual", targetHandle: "in", condition: { type: "always" }, priority: 0 },
+        { id: "e_4000_5", source: "n_3000_3", target: "n_3000_6", sourceHandle: "out", targetHandle: "in", condition: { type: "always" }, priority: 0 },
+        { id: "e_4000_6", source: "n_3000_4", target: "n_3000_6", sourceHandle: "out", targetHandle: "in", condition: { type: "always" }, priority: 0 },
+        { id: "e_4000_7", source: "n_3000_5", target: "n_3000_6", sourceHandle: "out", targetHandle: "in", condition: { type: "always" }, priority: 0 },
+        { id: "e_4000_8", source: "n_3000_6", target: "n_3000_7", sourceHandle: "out", targetHandle: "in", condition: { type: "always" }, priority: 0 },
+        { id: "e_4000_9", source: "n_3000_7", target: "n_3000_8", sourceHandle: "out", targetHandle: "in", condition: { type: "always" }, priority: 0 }
+      ],
+      variables: {},
+      settings: {
+        max_hops_per_message: 20,
+        fallback_behavior: "legacy_advance_bot",
+        timezone: "Asia/Kolkata"
+      },
+      ui: {
+        viewport: { x: 0, y: 0, zoom: 1 }
+      }
+    }
+  },
+  {
+    id: "sales-002",
+    name: "Demo Request Flow",
+    category: "sales",
+    description: "Collect demo requests with scheduling",
+    useCase: "Capture demo requests and schedule appointments",
+    complexity: "basic",
+    tags: ["demo", "scheduling", "sales"],
+    flow: {
+      schema_version: "1.0.0",
+      flow_uid: "sales-demo-002",
+      entry_node_id: "n_4000_1",
+      meta: {
+        name: "Demo Request Flow",
+        description: "Schedule product demos"
+      },
+      nodes: [
+        {
+          id: "n_4000_1",
+          type: "trigger.inbound_message",
+          position: { x: 100, y: 50 },
+          data: {
+            label: "Inbound Message",
+            config: {
+              match_mode: "keyword",
+              keywords: ["demo", "trial", "test", "try"],
+              case_sensitive: false
+            },
+            outputs: [{ key: "out", label: "Match" }]
+          }
+        },
+        {
+          id: "n_4000_2",
+          type: "message.compose",
+          position: { x: 100, y: 200 },
+          data: {
+            label: "Demo Options",
+            config: {
+              body_text: "Book a personalized demo with our team. Choose your preferred time slot:",
+              header_text: "Schedule Demo",
+              footer_text: "Select time",
+              interactive_type: "button",
+              buttons: [
+                { id: "btn_morning", title: "Morning 10AM" },
+                { id: "btn_afternoon", title: "Afternoon 2PM" },
+                { id: "btn_evening", title: "Evening 5PM" }
+              ],
+              list_data: null,
+              media_url: "",
+              media_type: "",
+              media_filename: ""
+            },
+            outputs: [
+              { key: "btn_morning", label: "Morning" },
+              { key: "btn_afternoon", label: "Afternoon" },
+              { key: "btn_evening", label: "Evening" }
+            ]
+          }
+        },
+        {
+          id: "n_4000_3",
+          type: "message.compose",
+          position: { x: 100, y: 400 },
+          data: {
+            label: "Confirmation",
+            config: {
+              body_text: "Your demo has been scheduled! You'll receive a calendar invite shortly. We'll contact you on the provided number.",
+              header_text: "Demo Booked!",
+              footer_text: "",
+              interactive_type: "none",
+              buttons: [],
+              list_data: null,
+              media_url: "",
+              media_type: "",
+              media_filename: ""
+            },
+            outputs: [{ key: "out", label: "Next" }]
+          }
+        },
+        {
+          id: "n_4000_4",
+          type: "action.tag_contact",
+          position: { x: 100, y: 580 },
+          data: {
+            label: "Tag Demo Scheduled",
+            config: { tag: "demo-scheduled" },
+            outputs: [{ key: "out", label: "Next" }]
+          }
+        },
+        {
+          id: "n_4000_5",
+          type: "control.end",
+          position: { x: 100, y: 720 },
+          data: {
+            label: "End",
+            config: { result: "completed" },
+            outputs: []
+          }
+        }
+      ],
+      edges: [
+        { id: "e_5000_1", source: "n_4000_1", target: "n_4000_2", sourceHandle: "out", targetHandle: "in", condition: { type: "always" }, priority: 0 },
+        { id: "e_5000_2", source: "n_4000_2", target: "n_4000_3", sourceHandle: "btn_morning", targetHandle: "in", condition: { type: "always" }, priority: 0 },
+        { id: "e_5000_3", source: "n_4000_2", target: "n_4000_3", sourceHandle: "btn_afternoon", targetHandle: "in", condition: { type: "always" }, priority: 0 },
+        { id: "e_5000_4", source: "n_4000_2", target: "n_4000_3", sourceHandle: "btn_evening", targetHandle: "in", condition: { type: "always" }, priority: 0 },
+        { id: "e_5000_5", source: "n_4000_3", target: "n_4000_4", sourceHandle: "out", targetHandle: "in", condition: { type: "always" }, priority: 0 },
+        { id: "e_5000_6", source: "n_4000_4", target: "n_4000_5", sourceHandle: "out", targetHandle: "in", condition: { type: "always" }, priority: 0 }
+      ],
+      variables: {},
+      settings: {
+        max_hops_per_message: 20,
+        fallback_behavior: "legacy_advance_bot",
+        timezone: "Asia/Kolkata"
+      },
+      ui: {
+        viewport: { x: 0, y: 0, zoom: 1 }
+      }
+    }
+  },
+
+  // SUPPORT FLOWS
+  {
+    id: "support-001",
+    name: "Support Triage Flow",
+    category: "support",
+    description: "Route support requests to appropriate teams",
+    useCase: "Categorize and route support tickets automatically",
+    complexity: "intermediate",
+    tags: ["support", "triage", "routing"],
+    flow: {
+      schema_version: "1.0.0",
+      flow_uid: "support-triage-001",
+      entry_node_id: "n_5000_1",
+      meta: {
+        name: "Support Triage Flow",
+        description: "Route support requests to teams"
+      },
+      nodes: [
+        {
+          id: "n_5000_1",
+          type: "trigger.inbound_message",
+          position: { x: 100, y: 50 },
+          data: {
+            label: "Inbound Message",
+            config: {
+              match_mode: "keyword",
+              keywords: ["help", "support", "issue", "problem"],
+              case_sensitive: false
+            },
+            outputs: [{ key: "out", label: "Match" }]
+          }
+        },
+        {
+          id: "n_5000_2",
+          type: "message.compose",
+          position: { x: 100, y: 200 },
+          data: {
+            label: "Support Category",
+            config: {
+              body_text: "We're here to help! Please select the type of issue you're facing:",
+              header_text: "Support",
+              footer_text: "Select category",
+              interactive_type: "button",
+              buttons: [
+                { id: "btn_technical", title: "Technical" },
+                { id: "btn_billing", title: "Billing" },
+                { id: "btn_account", title: "Account" }
+              ],
+              list_data: null,
+              media_url: "",
+              media_type: "",
+              media_filename: ""
+            },
+            outputs: [
+              { key: "btn_technical", label: "Technical" },
+              { key: "btn_billing", label: "Billing" },
+              { key: "btn_account", label: "Account" }
+            ]
+          }
+        },
+        {
+          id: "n_5000_3",
+          type: "action.set_variable",
+          position: { x: 50, y: 400 },
+          data: {
+            label: "Set Ticket Type",
+            config: { key: "ticket_type", value: "technical" },
+            outputs: [{ key: "out", label: "Next" }]
+          }
+        },
+        {
+          id: "n_5000_4",
+          type: "action.set_variable",
+          position: { x: 200, y: 400 },
+          data: {
+            label: "Set Ticket Type",
+            config: { key: "ticket_type", value: "billing" },
+            outputs: [{ key: "out", label: "Next" }]
+          }
+        },
+        {
+          id: "n_5000_5",
+          type: "action.set_variable",
+          position: { x: 350, y: 400 },
+          data: {
+            label: "Set Ticket Type",
+            config: { key: "ticket_type", value: "account" },
+            outputs: [{ key: "out", label: "Next" }]
+          }
+        },
+        {
+          id: "n_5000_6",
+          type: "message.compose",
+          position: { x: 200, y: 580 },
+          data: {
+            label: "Acknowledge",
+            config: {
+              body_text: "Your support ticket has been created. Our team will respond within 2 hours. Ticket ID: #TKT{timestamp}",
+              header_text: "",
+              footer_text: "",
+              interactive_type: "none",
+              buttons: [],
+              list_data: null,
+              media_url: "",
+              media_type: "",
+              media_filename: ""
+            },
+            outputs: [{ key: "out", label: "Next" }]
+          }
+        },
+        {
+          id: "n_5000_7",
+          type: "control.end",
+          position: { x: 200, y: 750 },
+          data: {
+            label: "End",
+            config: { result: "completed" },
+            outputs: []
+          }
+        }
+      ],
+      edges: [
+        { id: "e_6000_1", source: "n_5000_1", target: "n_5000_2", sourceHandle: "out", targetHandle: "in", condition: { type: "always" }, priority: 0 },
+        { id: "e_6000_2", source: "n_5000_2", target: "n_5000_3", sourceHandle: "btn_technical", targetHandle: "in", condition: { type: "always" }, priority: 0 },
+        { id: "e_6000_3", source: "n_5000_2", target: "n_5000_4", sourceHandle: "btn_billing", targetHandle: "in", condition: { type: "always" }, priority: 0 },
+        { id: "e_6000_4", source: "n_5000_2", target: "n_5000_5", sourceHandle: "btn_account", targetHandle: "in", condition: { type: "always" }, priority: 0 },
+        { id: "e_6000_5", source: "n_5000_3", target: "n_5000_6", sourceHandle: "out", targetHandle: "in", condition: { type: "always" }, priority: 0 },
+        { id: "e_6000_6", source: "n_5000_4", target: "n_5000_6", sourceHandle: "out", targetHandle: "in", condition: { type: "always" }, priority: 0 },
+        { id: "e_6000_7", source: "n_5000_5", target: "n_5000_6", sourceHandle: "out", targetHandle: "in", condition: { type: "always" }, priority: 0 },
+        { id: "e_6000_8", source: "n_5000_6", target: "n_5000_7", sourceHandle: "out", targetHandle: "in", condition: { type: "always" }, priority: 0 }
+      ],
+      variables: {},
+      settings: {
+        max_hops_per_message: 20,
+        fallback_behavior: "legacy_advance_bot",
+        timezone: "Asia/Kolkata"
+      },
+      ui: {
+        viewport: { x: 0, y: 0, zoom: 1 }
+      }
+    }
+  },
+  {
+    id: "support-002",
+    name: "FAQ Bot Flow",
+    category: "support",
+    description: "Answer common questions automatically",
+    useCase: "Handle frequently asked questions without agent intervention",
+    complexity: "basic",
+    tags: ["faq", "self-service", "automation"],
+    flow: {
+      schema_version: "1.0.0",
+      flow_uid: "support-faq-002",
+      entry_node_id: "n_6000_1",
+      meta: {
+        name: "FAQ Bot Flow",
+        description: "Automated FAQ responses"
+      },
+      nodes: [
+        {
+          id: "n_6000_1",
+          type: "trigger.inbound_message",
+          position: { x: 100, y: 50 },
+          data: {
+            label: "Inbound Message",
+            config: {
+              match_mode: "keyword",
+              keywords: ["faq", "question", "how to", "info"],
+              case_sensitive: false
+            },
+            outputs: [{ key: "out", label: "Match" }]
+          }
+        },
+        {
+          id: "n_6000_2",
+          type: "message.compose",
+          position: { x: 100, y: 200 },
+          data: {
+            label: "FAQ Categories",
+            config: {
+              body_text: "Here are our most common topics. Select one to learn more:",
+              header_text: "FAQ",
+              footer_text: "Select topic",
+              interactive_type: "button",
+              buttons: [
+                { id: "btn_pricing", title: "Pricing" },
+                { id: "btn_features", title: "Features" },
+                { id: "btn_contact", title: "Contact" }
+              ],
+              list_data: null,
+              media_url: "",
+              media_type: "",
+              media_filename: ""
+            },
+            outputs: [
+              { key: "btn_pricing", label: "Pricing" },
+              { key: "btn_features", label: "Features" },
+              { key: "btn_contact", label: "Contact" }
+            ]
+          }
+        },
+        {
+          id: "n_6000_3",
+          type: "message.compose",
+          position: { x: 50, y: 400 },
+          data: {
+            label: "Pricing Info",
+            config: {
+              body_text: "Our pricing starts at INR 999/month. Visit whats91.com/pricing for detailed plans. All plans include 24/7 support!",
+              header_text: "Pricing",
+              footer_text: "",
+              interactive_type: "none",
+              buttons: [],
+              list_data: null,
+              media_url: "",
+              media_type: "",
+              media_filename: ""
+            },
+            outputs: [{ key: "out", label: "Next" }]
+          }
+        },
+        {
+          id: "n_6000_4",
+          type: "message.compose",
+          position: { x: 200, y: 400 },
+          data: {
+            label: "Features Info",
+            config: {
+              body_text: "Key features: Flow Builder, WhatsApp API, Team Inbox, Analytics, and more! Visit whats91.com/features for details.",
+              header_text: "Features",
+              footer_text: "",
+              interactive_type: "none",
+              buttons: [],
+              list_data: null,
+              media_url: "",
+              media_type: "",
+              media_filename: ""
+            },
+            outputs: [{ key: "out", label: "Next" }]
+          }
+        },
+        {
+          id: "n_6000_5",
+          type: "message.compose",
+          position: { x: 350, y: 400 },
+          data: {
+            label: "Contact Info",
+            config: {
+              body_text: "Contact us at support@whats91.com or call +91-XXXXXXXXXX. Our team is available Mon-Sat, 9 AM - 6 PM IST.",
+              header_text: "Contact",
+              footer_text: "",
+              interactive_type: "none",
+              buttons: [],
+              list_data: null,
+              media_url: "",
+              media_type: "",
+              media_filename: ""
+            },
+            outputs: [{ key: "out", label: "Next" }]
+          }
+        },
+        {
+          id: "n_6000_6",
+          type: "control.end",
+          position: { x: 200, y: 580 },
+          data: {
+            label: "End",
+            config: { result: "completed" },
+            outputs: []
+          }
+        }
+      ],
+      edges: [
+        { id: "e_7000_1", source: "n_6000_1", target: "n_6000_2", sourceHandle: "out", targetHandle: "in", condition: { type: "always" }, priority: 0 },
+        { id: "e_7000_2", source: "n_6000_2", target: "n_6000_3", sourceHandle: "btn_pricing", targetHandle: "in", condition: { type: "always" }, priority: 0 },
+        { id: "e_7000_3", source: "n_6000_2", target: "n_6000_4", sourceHandle: "btn_features", targetHandle: "in", condition: { type: "always" }, priority: 0 },
+        { id: "e_7000_4", source: "n_6000_2", target: "n_6000_5", sourceHandle: "btn_contact", targetHandle: "in", condition: { type: "always" }, priority: 0 },
+        { id: "e_7000_5", source: "n_6000_3", target: "n_6000_6", sourceHandle: "out", targetHandle: "in", condition: { type: "always" }, priority: 0 },
+        { id: "e_7000_6", source: "n_6000_4", target: "n_6000_6", sourceHandle: "out", targetHandle: "in", condition: { type: "always" }, priority: 0 },
+        { id: "e_7000_7", source: "n_6000_5", target: "n_6000_6", sourceHandle: "out", targetHandle: "in", condition: { type: "always" }, priority: 0 }
+      ],
+      variables: {},
+      settings: {
+        max_hops_per_message: 20,
+        fallback_behavior: "legacy_advance_bot",
+        timezone: "Asia/Kolkata"
+      },
+      ui: {
+        viewport: { x: 0, y: 0, zoom: 1 }
+      }
+    }
+  },
+
+  // E-COMMERCE FLOWS
+  {
+    id: "ecom-001",
     name: "Order Confirmation Flow",
-    category: "sales-order",
-    description: "Send order confirmation with details and expected delivery",
-    useCase: "Confirm sales orders with item list, totals, and delivery timeline",
-    erpModule: "Sales > Order",
-    triggers: ["Webhook: Order.Created", "API: Manual Trigger"],
-    integrations: ["Busy API", "WhatsApp Cloud API"],
-    estimatedTime: "2-3 seconds",
+    category: "ecommerce",
+    description: "Send order confirmation with details",
+    useCase: "Confirm orders with item summary and delivery timeline",
     complexity: "basic",
-    steps: [
-      { id: "s1", type: "trigger", label: "Order Created Event", description: "Webhook from Busy on order creation", config: { event: "order.created" }, nextSteps: ["s2"] },
-      { id: "s2", type: "action", label: "Fetch Order Details", description: "Get complete order information", config: { endpoint: "/api/order/{id}" }, nextSteps: ["s3"] },
-      { id: "s3", type: "condition", label: "Stock Available?", description: "Check inventory for all items", config: { check: "inventory_available" }, nextSteps: ["s4", "s5"] },
-      { id: "s4", type: "message", label: "Send Confirmation", description: "Order confirmed with delivery date", config: { template: "order_confirmed" }, nextSteps: ["s6"] },
-      { id: "s5", type: "message", label: "Send Pending Confirmation", description: "Order received, awaiting stock", config: { template: "order_pending_stock" }, nextSteps: ["s6"] },
-      { id: "s6", type: "action", label: "Create Follow-up Task", description: "Schedule delivery follow-up", config: { taskType: "delivery_followup" }, nextSteps: ["s7"] },
-      { id: "s7", type: "end", label: "Flow Complete", description: "Order confirmation flow ended", nextSteps: [] },
-    ],
+    tags: ["orders", "confirmation", "ecommerce"],
+    flow: {
+      schema_version: "1.0.0",
+      flow_uid: "ecom-order-001",
+      entry_node_id: "n_7000_1",
+      meta: {
+        name: "Order Confirmation Flow",
+        description: "Send order confirmation"
+      },
+      nodes: [
+        {
+          id: "n_7000_1",
+          type: "trigger.inbound_message",
+          position: { x: 100, y: 50 },
+          data: {
+            label: "Inbound Message",
+            config: {
+              match_mode: "keyword",
+              keywords: ["order", "track", "my order"],
+              case_sensitive: false
+            },
+            outputs: [{ key: "out", label: "Match" }]
+          }
+        },
+        {
+          id: "n_7000_2",
+          type: "message.compose",
+          position: { x: 100, y: 200 },
+          data: {
+            label: "Order Options",
+            config: {
+              body_text: "How can we help with your order?",
+              header_text: "Order Support",
+              footer_text: "Select option",
+              interactive_type: "button",
+              buttons: [
+                { id: "btn_track", title: "Track Order" },
+                { id: "btn_cancel", title: "Cancel" },
+                { id: "btn_modify", title: "Modify" }
+              ],
+              list_data: null,
+              media_url: "",
+              media_type: "",
+              media_filename: ""
+            },
+            outputs: [
+              { key: "btn_track", label: "Track" },
+              { key: "btn_cancel", label: "Cancel" },
+              { key: "btn_modify", label: "Modify" }
+            ]
+          }
+        },
+        {
+          id: "n_7000_3",
+          type: "message.compose",
+          position: { x: 50, y: 400 },
+          data: {
+            label: "Track Order",
+            config: {
+              body_text: "Your order #ORD12345 is out for delivery and will arrive by 5 PM today. Track live: bit.ly/track123",
+              header_text: "Order Status",
+              footer_text: "",
+              interactive_type: "none",
+              buttons: [],
+              list_data: null,
+              media_url: "",
+              media_type: "",
+              media_filename: ""
+            },
+            outputs: [{ key: "out", label: "Next" }]
+          }
+        },
+        {
+          id: "n_7000_4",
+          type: "message.compose",
+          position: { x: 200, y: 400 },
+          data: {
+            label: "Cancel Info",
+            config: {
+              body_text: "To cancel your order, please provide your order number. Cancellation is free within 1 hour of placing the order.",
+              header_text: "Cancellation",
+              footer_text: "",
+              interactive_type: "none",
+              buttons: [],
+              list_data: null,
+              media_url: "",
+              media_type: "",
+              media_filename: ""
+            },
+            outputs: [{ key: "out", label: "Next" }]
+          }
+        },
+        {
+          id: "n_7000_5",
+          type: "message.compose",
+          position: { x: 350, y: 400 },
+          data: {
+            label: "Modify Info",
+            config: {
+              body_text: "To modify your order (address/quantity), please share your order number and the changes needed.",
+              header_text: "Modification",
+              footer_text: "",
+              interactive_type: "none",
+              buttons: [],
+              list_data: null,
+              media_url: "",
+              media_type: "",
+              media_filename: ""
+            },
+            outputs: [{ key: "out", label: "Next" }]
+          }
+        },
+        {
+          id: "n_7000_6",
+          type: "control.end",
+          position: { x: 200, y: 580 },
+          data: {
+            label: "End",
+            config: { result: "completed" },
+            outputs: []
+          }
+        }
+      ],
+      edges: [
+        { id: "e_8000_1", source: "n_7000_1", target: "n_7000_2", sourceHandle: "out", targetHandle: "in", condition: { type: "always" }, priority: 0 },
+        { id: "e_8000_2", source: "n_7000_2", target: "n_7000_3", sourceHandle: "btn_track", targetHandle: "in", condition: { type: "always" }, priority: 0 },
+        { id: "e_8000_3", source: "n_7000_2", target: "n_7000_4", sourceHandle: "btn_cancel", targetHandle: "in", condition: { type: "always" }, priority: 0 },
+        { id: "e_8000_4", source: "n_7000_2", target: "n_7000_5", sourceHandle: "btn_modify", targetHandle: "in", condition: { type: "always" }, priority: 0 },
+        { id: "e_8000_5", source: "n_7000_3", target: "n_7000_6", sourceHandle: "out", targetHandle: "in", condition: { type: "always" }, priority: 0 },
+        { id: "e_8000_6", source: "n_7000_4", target: "n_7000_6", sourceHandle: "out", targetHandle: "in", condition: { type: "always" }, priority: 0 },
+        { id: "e_8000_7", source: "n_7000_5", target: "n_7000_6", sourceHandle: "out", targetHandle: "in", condition: { type: "always" }, priority: 0 }
+      ],
+      variables: {},
+      settings: {
+        max_hops_per_message: 20,
+        fallback_behavior: "legacy_advance_bot",
+        timezone: "Asia/Kolkata"
+      },
+      ui: {
+        viewport: { x: 0, y: 0, zoom: 1 }
+      }
+    }
   },
   {
-    id: "so-002",
-    name: "Order Status Query",
-    category: "sales-order",
-    description: "Bot to check and communicate order status",
-    useCase: "Customers query order status by order number or phone number",
-    erpModule: "Sales > Order",
-    triggers: ["WhatsApp Message: Order Query", "Keyword: ORDER"],
-    integrations: ["Busy API", "WhatsApp Cloud API"],
-    estimatedTime: "1-2 seconds",
-    complexity: "basic",
-    steps: [
-      { id: "s1", type: "trigger", label: "Status Query Received", description: "Customer asks for order status", config: { keywords: ["ORDER", "Status", "Track"] }, nextSteps: ["s2"] },
-      { id: "s2", type: "action", label: "Identify Customer", description: "Match phone number to customer account", config: { matchBy: "phone" }, nextSteps: ["s3"] },
-      { id: "s3", type: "api_call", label: "Fetch Orders", description: "Get customer's active orders", config: { endpoint: "/api/orders/by_customer/{id}" }, nextSteps: ["s4"] },
-      { id: "s4", type: "message", label: "Send Order List", description: "Display active orders with quick actions", config: { template: "order_list_response" }, nextSteps: ["s5"] },
-      { id: "s5", type: "end", label: "Query Complete", description: "Order status provided", nextSteps: [] },
-    ],
+    id: "ecom-002",
+    name: "COD Verification Flow",
+    category: "ecommerce",
+    description: "Verify Cash on Delivery orders",
+    useCase: "Confirm COD orders to reduce returns and fake orders",
+    complexity: "intermediate",
+    tags: ["cod", "verification", "ecommerce"],
+    flow: {
+      schema_version: "1.0.0",
+      flow_uid: "ecom-cod-002",
+      entry_node_id: "n_8000_1",
+      meta: {
+        name: "COD Verification Flow",
+        description: "Verify COD orders"
+      },
+      nodes: [
+        {
+          id: "n_8000_1",
+          type: "trigger.inbound_message",
+          position: { x: 100, y: 50 },
+          data: {
+            label: "Inbound Message",
+            config: {
+              match_mode: "keyword",
+              keywords: ["cod", "confirm", "verify"],
+              case_sensitive: false
+            },
+            outputs: [{ key: "out", label: "Match" }]
+          }
+        },
+        {
+          id: "n_8000_2",
+          type: "message.compose",
+          position: { x: 100, y: 200 },
+          data: {
+            label: "COD Confirmation",
+            config: {
+              body_text: "You have a Cash on Delivery order of INR 1,499. Please confirm to proceed with shipping.",
+              header_text: "Order Confirmation",
+              footer_text: "Please respond",
+              interactive_type: "button",
+              buttons: [
+                { id: "btn_confirm", title: "Confirm" },
+                { id: "btn_cancel", title: "Cancel" }
+              ],
+              list_data: null,
+              media_url: "",
+              media_type: "",
+              media_filename: ""
+            },
+            outputs: [
+              { key: "btn_confirm", label: "Confirm" },
+              { key: "btn_cancel", label: "Cancel" }
+            ]
+          }
+        },
+        {
+          id: "n_8000_3",
+          type: "message.compose",
+          position: { x: 50, y: 400 },
+          data: {
+            label: "Confirmed",
+            config: {
+              body_text: "Thank you for confirming! Your order will be shipped within 24 hours. You'll receive tracking details via SMS.",
+              header_text: "Confirmed!",
+              footer_text: "",
+              interactive_type: "none",
+              buttons: [],
+              list_data: null,
+              media_url: "",
+              media_type: "",
+              media_filename: ""
+            },
+            outputs: [{ key: "out", label: "Next" }]
+          }
+        },
+        {
+          id: "n_8000_4",
+          type: "message.compose",
+          position: { x: 250, y: 400 },
+          data: {
+            label: "Cancelled",
+            config: {
+              body_text: "Your order has been cancelled as requested. To place a new order, visit our website.",
+              header_text: "Cancelled",
+              footer_text: "",
+              interactive_type: "none",
+              buttons: [],
+              list_data: null,
+              media_url: "",
+              media_type: "",
+              media_filename: ""
+            },
+            outputs: [{ key: "out", label: "Next" }]
+          }
+        },
+        {
+          id: "n_8000_5",
+          type: "action.tag_contact",
+          position: { x: 50, y: 580 },
+          data: {
+            label: "Tag Confirmed",
+            config: { tag: "cod-confirmed" },
+            outputs: [{ key: "out", label: "Next" }]
+          }
+        },
+        {
+          id: "n_8000_6",
+          type: "action.tag_contact",
+          position: { x: 250, y: 580 },
+          data: {
+            label: "Tag Cancelled",
+            config: { tag: "cod-cancelled" },
+            outputs: [{ key: "out", label: "Next" }]
+          }
+        },
+        {
+          id: "n_8000_7",
+          type: "control.end",
+          position: { x: 150, y: 750 },
+          data: {
+            label: "End",
+            config: { result: "completed" },
+            outputs: []
+          }
+        }
+      ],
+      edges: [
+        { id: "e_9000_1", source: "n_8000_1", target: "n_8000_2", sourceHandle: "out", targetHandle: "in", condition: { type: "always" }, priority: 0 },
+        { id: "e_9000_2", source: "n_8000_2", target: "n_8000_3", sourceHandle: "btn_confirm", targetHandle: "in", condition: { type: "always" }, priority: 0 },
+        { id: "e_9000_3", source: "n_8000_2", target: "n_8000_4", sourceHandle: "btn_cancel", targetHandle: "in", condition: { type: "always" }, priority: 0 },
+        { id: "e_9000_4", source: "n_8000_3", target: "n_8000_5", sourceHandle: "out", targetHandle: "in", condition: { type: "always" }, priority: 0 },
+        { id: "e_9000_5", source: "n_8000_4", target: "n_8000_6", sourceHandle: "out", targetHandle: "in", condition: { type: "always" }, priority: 0 },
+        { id: "e_9000_6", source: "n_8000_5", target: "n_8000_7", sourceHandle: "out", targetHandle: "in", condition: { type: "always" }, priority: 0 },
+        { id: "e_9000_7", source: "n_8000_6", target: "n_8000_7", sourceHandle: "out", targetHandle: "in", condition: { type: "always" }, priority: 0 }
+      ],
+      variables: {},
+      settings: {
+        max_hops_per_message: 20,
+        fallback_behavior: "legacy_advance_bot",
+        timezone: "Asia/Kolkata"
+      },
+      ui: {
+        viewport: { x: 0, y: 0, zoom: 1 }
+      }
+    }
   },
 
-  // Sales Return Flows
-  {
-    id: "sr-001",
-    name: "Return Request Handler",
-    category: "sales-return",
-    description: "Process and acknowledge sales return requests",
-    useCase: "Customer initiates return, bot guides through process and creates return entry",
-    erpModule: "Sales > Return",
-    triggers: ["WhatsApp Message: Return Request", "Keyword: RETURN"],
-    integrations: ["Busy API", "WhatsApp Cloud API", "Image Processing"],
-    estimatedTime: "3-5 seconds",
-    complexity: "advanced",
-    steps: [
-      { id: "s1", type: "trigger", label: "Return Request", description: "Customer initiates return via WhatsApp", config: { keywords: ["Return", "Replace", "Defective"] }, nextSteps: ["s2"] },
-      { id: "s2", type: "message", label: "Ask Invoice Number", description: "Request original invoice reference", config: { template: "request_invoice_number" }, nextSteps: ["s3"] },
-      { id: "s3", type: "wait", label: "Wait for Response", description: "Wait for customer to provide invoice", config: { timeout: "24h" }, nextSteps: ["s4"] },
-      { id: "s4", type: "api_call", label: "Validate Invoice", description: "Verify invoice and check return eligibility", config: { endpoint: "/api/invoice/{id}/return_eligibility" }, nextSteps: ["s5"] },
-      { id: "s5", type: "condition", label: "Return Allowed?", description: "Check return policy conditions", config: { daysLimit: 30, condition: "unused" }, nextSteps: ["s6", "s7"] },
-      { id: "s6", type: "message", label: "Request Item Details", description: "Ask which items and reason for return", config: { template: "return_item_selection" }, nextSteps: ["s8"] },
-      { id: "s7", type: "message", label: "Reject Return", description: "Explain return policy violation", config: { template: "return_rejected" }, nextSteps: ["s10"] },
-      { id: "s8", type: "action", label: "Create Return Entry", description: "Generate sales return in Busy", config: { autoApprove: false }, nextSteps: ["s9"] },
-      { id: "s9", type: "message", label: "Send Return Acknowledgment", description: "Confirm return registered with reference", config: { template: "return_acknowledged" }, nextSteps: ["s10"] },
-      { id: "s10", type: "end", label: "Flow Complete", description: "Return process initiated or rejected", nextSteps: [] },
-    ],
-  },
-
-  // Purchase Flows
-  {
-    id: "pu-001",
-    name: "Purchase Order Confirmation",
-    category: "purchase",
-    description: "Notify vendors about purchase orders",
-    useCase: "Send PO details to vendors with item list and delivery requirements",
-    erpModule: "Purchase > Order",
-    triggers: ["Webhook: PO.Created", "Manual Trigger"],
-    integrations: ["Busy API", "WhatsApp Cloud API", "Vendor Portal"],
-    estimatedTime: "2-3 seconds",
-    complexity: "basic",
-    steps: [
-      { id: "s1", type: "trigger", label: "PO Created", description: "Purchase order generated in Busy", config: { event: "purchase_order.created" }, nextSteps: ["s2"] },
-      { id: "s2", type: "action", label: "Fetch Vendor Details", description: "Get vendor contact and preferences", config: { endpoint: "/api/vendor/{id}" }, nextSteps: ["s3"] },
-      { id: "s3", type: "condition", label: "Vendor WhatsApp?", description: "Check if vendor uses WhatsApp", config: { field: "preferred_channel" }, nextSteps: ["s4", "s5"] },
-      { id: "s4", type: "message", label: "Send PO via WhatsApp", description: "Send PO notification with PDF", config: { template: "po_notification_vendor" }, nextSteps: ["s6"] },
-      { id: "s5", type: "action", label: "Send via Email", description: "Fallback to email notification", config: { channel: "email" }, nextSteps: ["s6"] },
-      { id: "s6", type: "action", label: "Log Communication", description: "Record PO sent to vendor", config: { table: "po_communications" }, nextSteps: ["s7"] },
-      { id: "s7", type: "end", label: "Flow Complete", description: "PO notification sent", nextSteps: [] },
-    ],
-  },
-
-  // Payment Flows
+  // PAYMENT FLOWS
   {
     id: "pay-001",
-    name: "Payment Received Confirmation",
+    name: "Payment Reminder Flow",
     category: "payments",
-    description: "Confirm payment receipt to customers",
-    useCase: "Auto-send payment confirmation when payment is recorded in Busy",
-    erpModule: "Account > Receipt",
-    triggers: ["Webhook: Payment.Received", "API Trigger"],
-    integrations: ["Busy API", "WhatsApp Cloud API", "Payment Gateway"],
-    estimatedTime: "1-2 seconds",
+    description: "Send payment reminders for overdue invoices",
+    useCase: "Automated payment reminders with payment link",
     complexity: "basic",
-    steps: [
-      { id: "s1", type: "trigger", label: "Payment Recorded", description: "Payment entry created in Busy", config: { event: "payment.received" }, nextSteps: ["s2"] },
-      { id: "s2", type: "action", label: "Fetch Payment Details", description: "Get payment and invoice linkage", config: { endpoint: "/api/payment/{id}" }, nextSteps: ["s3"] },
-      { id: "s3", type: "action", label: "Update Invoice Status", description: "Mark invoices as paid/partially paid", config: { action: "update_invoice_status" }, nextSteps: ["s4"] },
-      { id: "s4", type: "message", label: "Send Confirmation", description: "Send payment receipt to customer", config: { template: "payment_received_confirmation" }, nextSteps: ["s5"] },
-      { id: "s5", type: "end", label: "Flow Complete", description: "Payment confirmation sent", nextSteps: [] },
-    ],
+    tags: ["payments", "reminders", "invoices"],
+    flow: {
+      schema_version: "1.0.0",
+      flow_uid: "pay-reminder-001",
+      entry_node_id: "n_9000_1",
+      meta: {
+        name: "Payment Reminder Flow",
+        description: "Send payment reminders"
+      },
+      nodes: [
+        {
+          id: "n_9000_1",
+          type: "trigger.inbound_message",
+          position: { x: 100, y: 50 },
+          data: {
+            label: "Inbound Message",
+            config: {
+              match_mode: "keyword",
+              keywords: ["pay", "payment", "invoice"],
+              case_sensitive: false
+            },
+            outputs: [{ key: "out", label: "Match" }]
+          }
+        },
+        {
+          id: "n_9000_2",
+          type: "message.compose",
+          position: { x: 100, y: 200 },
+          data: {
+            label: "Payment Options",
+            config: {
+              body_text: "You have an outstanding balance of INR 5,000. How would you like to proceed?",
+              header_text: "Payment Due",
+              footer_text: "Select option",
+              interactive_type: "button",
+              buttons: [
+                { id: "btn_pay_now", title: "Pay Now" },
+                { id: "btn_details", title: "View Details" },
+                { id: "btn_help", title: "Get Help" }
+              ],
+              list_data: null,
+              media_url: "",
+              media_type: "",
+              media_filename: ""
+            },
+            outputs: [
+              { key: "btn_pay_now", label: "Pay Now" },
+              { key: "btn_details", label: "Details" },
+              { key: "btn_help", label: "Help" }
+            ]
+          }
+        },
+        {
+          id: "n_9000_3",
+          type: "message.compose",
+          position: { x: 50, y: 400 },
+          data: {
+            label: "Payment Link",
+            config: {
+              body_text: "Click here to pay: https://pay.whats91.com/inv123\nAmount: INR 5,000\nInvoice: INV-2024-001\nDue Date: 15 Jan 2024",
+              header_text: "Payment Link",
+              footer_text: "",
+              interactive_type: "none",
+              buttons: [],
+              list_data: null,
+              media_url: "",
+              media_type: "",
+              media_filename: ""
+            },
+            outputs: [{ key: "out", label: "Next" }]
+          }
+        },
+        {
+          id: "n_9000_4",
+          type: "message.compose",
+          position: { x: 200, y: 400 },
+          data: {
+            label: "Invoice Details",
+            config: {
+              body_text: "Invoice: INV-2024-001\nDate: 01 Jan 2024\nItems: 3\nSubtotal: INR 4,500\nGST: INR 500\nTotal: INR 5,000",
+              header_text: "Invoice Details",
+              footer_text: "",
+              interactive_type: "none",
+              buttons: [],
+              list_data: null,
+              media_url: "",
+              media_type: "",
+              media_filename: ""
+            },
+            outputs: [{ key: "out", label: "Next" }]
+          }
+        },
+        {
+          id: "n_9000_5",
+          type: "message.compose",
+          position: { x: 350, y: 400 },
+          data: {
+            label: "Help Response",
+            config: {
+              body_text: "For payment assistance, contact our support team:\nPhone: +91-XXXXXXXXXX\nEmail: billing@whats91.com\nHours: Mon-Sat, 9 AM - 6 PM",
+              header_text: "Need Help?",
+              footer_text: "",
+              interactive_type: "none",
+              buttons: [],
+              list_data: null,
+              media_url: "",
+              media_type: "",
+              media_filename: ""
+            },
+            outputs: [{ key: "out", label: "Next" }]
+          }
+        },
+        {
+          id: "n_9000_6",
+          type: "control.end",
+          position: { x: 200, y: 580 },
+          data: {
+            label: "End",
+            config: { result: "completed" },
+            outputs: []
+          }
+        }
+      ],
+      edges: [
+        { id: "e_10000_1", source: "n_9000_1", target: "n_9000_2", sourceHandle: "out", targetHandle: "in", condition: { type: "always" }, priority: 0 },
+        { id: "e_10000_2", source: "n_9000_2", target: "n_9000_3", sourceHandle: "btn_pay_now", targetHandle: "in", condition: { type: "always" }, priority: 0 },
+        { id: "e_10000_3", source: "n_9000_2", target: "n_9000_4", sourceHandle: "btn_details", targetHandle: "in", condition: { type: "always" }, priority: 0 },
+        { id: "e_10000_4", source: "n_9000_2", target: "n_9000_5", sourceHandle: "btn_help", targetHandle: "in", condition: { type: "always" }, priority: 0 },
+        { id: "e_10000_5", source: "n_9000_3", target: "n_9000_6", sourceHandle: "out", targetHandle: "in", condition: { type: "always" }, priority: 0 },
+        { id: "e_10000_6", source: "n_9000_4", target: "n_9000_6", sourceHandle: "out", targetHandle: "in", condition: { type: "always" }, priority: 0 },
+        { id: "e_10000_7", source: "n_9000_5", target: "n_9000_6", sourceHandle: "out", targetHandle: "in", condition: { type: "always" }, priority: 0 }
+      ],
+      variables: {},
+      settings: {
+        max_hops_per_message: 20,
+        fallback_behavior: "legacy_advance_bot",
+        timezone: "Asia/Kolkata"
+      },
+      ui: {
+        viewport: { x: 0, y: 0, zoom: 1 }
+      }
+    }
   },
   {
     id: "pay-002",
-    name: "Outstanding Balance Query",
+    name: "Payment Confirmation Flow",
     category: "payments",
-    description: "Bot for customers to check their outstanding balance",
-    useCase: "Customers query their total outstanding and aging breakdown",
-    erpModule: "Account > Outstanding",
-    triggers: ["WhatsApp Message: Balance Query", "Keywords: BALANCE, OUTSTANDING, DUE"],
-    integrations: ["Busy API", "WhatsApp Cloud API"],
-    estimatedTime: "1-2 seconds",
+    description: "Confirm successful payments",
+    useCase: "Send payment receipt and thank you message",
     complexity: "basic",
-    steps: [
-      { id: "s1", type: "trigger", label: "Balance Query", description: "Customer asks for outstanding balance", config: { keywords: ["Balance", "Outstanding", "Due", "Bill"] }, nextSteps: ["s2"] },
-      { id: "s2", type: "action", label: "Identify Account", description: "Match phone to customer ledger", config: { matchBy: "phone" }, nextSteps: ["s3"] },
-      { id: "s3", type: "api_call", label: "Fetch Outstanding", description: "Get bill-by-bill outstanding", config: { endpoint: "/api/outstanding/{account_id}" }, nextSteps: ["s4"] },
-      { id: "s4", type: "message", label: "Send Outstanding Details", description: "Formatted balance with aging", config: { template: "outstanding_balance_response" }, nextSteps: ["s5"] },
-      { id: "s5", type: "end", label: "Query Complete", description: "Balance information provided", nextSteps: [] },
-    ],
+    tags: ["payments", "receipt", "confirmation"],
+    flow: {
+      schema_version: "1.0.0",
+      flow_uid: "pay-confirm-002",
+      entry_node_id: "n_10000_1",
+      meta: {
+        name: "Payment Confirmation Flow",
+        description: "Confirm payment receipt"
+      },
+      nodes: [
+        {
+          id: "n_10000_1",
+          type: "trigger.inbound_message",
+          position: { x: 100, y: 50 },
+          data: {
+            label: "Inbound Message",
+            config: {
+              match_mode: "keyword",
+              keywords: ["receipt", "paid", "done"],
+              case_sensitive: false
+            },
+            outputs: [{ key: "out", label: "Match" }]
+          }
+        },
+        {
+          id: "n_10000_2",
+          type: "message.compose",
+          position: { x: 100, y: 200 },
+          data: {
+            label: "Payment Receipt",
+            config: {
+              body_text: "Payment Received!\nAmount: INR 5,000\nTransaction ID: TXN123456\nDate: 10 Jan 2024, 3:30 PM\nMethod: UPI\n\nThank you for your payment!",
+              header_text: "Payment Confirmed",
+              footer_text: "",
+              interactive_type: "none",
+              buttons: [],
+              list_data: null,
+              media_url: "",
+              media_type: "",
+              media_filename: ""
+            },
+            outputs: [{ key: "out", label: "Next" }]
+          }
+        },
+        {
+          id: "n_10000_3",
+          type: "action.tag_contact",
+          position: { x: 100, y: 380 },
+          data: {
+            label: "Tag as Paid",
+            config: { tag: "payment-received" },
+            outputs: [{ key: "out", label: "Next" }]
+          }
+        },
+        {
+          id: "n_10000_4",
+          type: "control.end",
+          position: { x: 100, y: 520 },
+          data: {
+            label: "End",
+            config: { result: "completed" },
+            outputs: []
+          }
+        }
+      ],
+      edges: [
+        { id: "e_11000_1", source: "n_10000_1", target: "n_10000_2", sourceHandle: "out", targetHandle: "in", condition: { type: "always" }, priority: 0 },
+        { id: "e_11000_2", source: "n_10000_2", target: "n_10000_3", sourceHandle: "out", targetHandle: "in", condition: { type: "always" }, priority: 0 },
+        { id: "e_11000_3", source: "n_10000_3", target: "n_10000_4", sourceHandle: "out", targetHandle: "in", condition: { type: "always" }, priority: 0 }
+      ],
+      variables: {},
+      settings: {
+        max_hops_per_message: 20,
+        fallback_behavior: "legacy_advance_bot",
+        timezone: "Asia/Kolkata"
+      },
+      ui: {
+        viewport: { x: 0, y: 0, zoom: 1 }
+      }
+    }
   },
 
-  // Receipt Flows
+  // BOOKINGS FLOWS
   {
-    id: "rec-001",
-    name: "Receipt Delivery Flow",
-    category: "receipts",
-    description: "Auto-deliver receipts via WhatsApp",
-    useCase: "Send receipt copy when payment receipt is generated",
-    erpModule: "Account > Receipt",
-    triggers: ["Webhook: Receipt.Generated"],
-    integrations: ["Busy API", "WhatsApp Cloud API", "PDF Generator"],
-    estimatedTime: "2-3 seconds",
-    complexity: "basic",
-    steps: [
-      { id: "s1", type: "trigger", label: "Receipt Generated", description: "Receipt entry created in Busy", config: { event: "receipt.generated" }, nextSteps: ["s2"] },
-      { id: "s2", type: "action", label: "Generate Receipt PDF", description: "Create formatted receipt document", config: { template: "receipt_template" }, nextSteps: ["s3"] },
-      { id: "s3", type: "message", label: "Send Receipt", description: "Deliver receipt via WhatsApp", config: { template: "receipt_delivery", mediaType: "document" }, nextSteps: ["s4"] },
-      { id: "s4", type: "end", label: "Flow Complete", description: "Receipt delivered", nextSteps: [] },
-    ],
-  },
-
-  // Ledger Flows
-  {
-    id: "led-001",
-    name: "Ledger Statement Request",
-    category: "ledgers",
-    description: "Provide party ledger statements on demand",
-    useCase: "Customers request their account statement for a date range",
-    erpModule: "Account > Ledger",
-    triggers: ["WhatsApp Message: Ledger Request", "Keywords: LEDGER, STATEMENT, ACCOUNT"],
-    integrations: ["Busy API", "WhatsApp Cloud API", "PDF Generator"],
-    estimatedTime: "3-5 seconds",
+    id: "book-001",
+    name: "Appointment Booking Flow",
+    category: "bookings",
+    description: "Book appointments with time selection",
+    useCase: "Allow customers to schedule appointments via WhatsApp",
     complexity: "intermediate",
-    steps: [
-      { id: "s1", type: "trigger", label: "Statement Request", description: "Customer requests ledger statement", config: { keywords: ["Ledger", "Statement", "Account", "History"] }, nextSteps: ["s2"] },
-      { id: "s2", type: "action", label: "Identify Account", description: "Match to ledger account", config: { matchBy: "phone" }, nextSteps: ["s3"] },
-      { id: "s3", type: "message", label: "Ask Date Range", description: "Request statement period", config: { template: "request_date_range" }, nextSteps: ["s4"] },
-      { id: "s4", type: "wait", label: "Wait for Input", description: "Wait for date range response", config: { timeout: "1h" }, nextSteps: ["s5"] },
-      { id: "s5", type: "api_call", label: "Fetch Ledger", description: "Get ledger entries for period", config: { endpoint: "/api/ledger/{account_id}" }, nextSteps: ["s6"] },
-      { id: "s6", type: "action", label: "Generate Statement PDF", description: "Create formatted statement", config: { template: "ledger_statement" }, nextSteps: ["s7"] },
-      { id: "s7", type: "message", label: "Send Statement", description: "Deliver statement document", config: { template: "ledger_statement_delivery" }, nextSteps: ["s8"] },
-      { id: "s8", type: "end", label: "Flow Complete", description: "Statement delivered", nextSteps: [] },
-    ],
-  },
-
-  // Report Flows
-  {
-    id: "rep-001",
-    name: "Daily Sales Report",
-    category: "reports",
-    description: "Automated daily sales summary delivery",
-    useCase: "Send daily sales summary to management at configured time",
-    erpModule: "Reports > Sales",
-    triggers: ["Schedule: Daily 8:00 PM"],
-    integrations: ["Busy API", "WhatsApp Cloud API", "Report Generator"],
-    estimatedTime: "5-10 seconds",
-    complexity: "intermediate",
-    steps: [
-      { id: "s1", type: "trigger", label: "Scheduled Trigger", description: "Daily cron triggers at 8 PM", config: { schedule: "0 20 * * *" }, nextSteps: ["s2"] },
-      { id: "s2", type: "api_call", label: "Fetch Sales Data", description: "Get today's sales summary", config: { endpoint: "/api/reports/sales/daily" }, nextSteps: ["s3"] },
-      { id: "s3", type: "action", label: "Generate Report", description: "Compile sales summary report", config: { format: "summary_card" }, nextSteps: ["s4"] },
-      { id: "s4", type: "action", label: "Get Recipients", description: "Fetch management recipients list", config: { table: "report_recipients" }, nextSteps: ["s5"] },
-      { id: "s5", type: "message", label: "Send to Management", description: "Deliver report to each recipient", config: { template: "daily_sales_report" }, nextSteps: ["s6"] },
-      { id: "s6", type: "end", label: "Flow Complete", description: "Daily report sent", nextSteps: [] },
-    ],
-  },
-  {
-    id: "rep-002",
-    name: "On-Demand Report Bot",
-    category: "reports",
-    description: "Interactive bot for report requests",
-    useCase: "Management can request specific reports via WhatsApp commands",
-    erpModule: "Reports > All",
-    triggers: ["WhatsApp Message: Report Request", "Keywords: REPORT"],
-    integrations: ["Busy API", "WhatsApp Cloud API"],
-    estimatedTime: "5-15 seconds",
-    complexity: "advanced",
-    steps: [
-      { id: "s1", type: "trigger", label: "Report Request", description: "User requests a report", config: { keywords: ["Report", "Summary", "Analysis"] }, nextSteps: ["s2"] },
-      { id: "s2", type: "condition", label: "Authorized User?", description: "Check if user has report access", config: { role: "management" }, nextSteps: ["s3", "s8"] },
-      { id: "s3", type: "message", label: "Show Report Menu", description: "Display available report options", config: { template: "report_menu" }, nextSteps: ["s4"] },
-      { id: "s4", type: "wait", label: "Wait for Selection", description: "Wait for report choice", config: { timeout: "5m" }, nextSteps: ["s5"] },
-      { id: "s5", type: "api_call", label: "Generate Report", description: "Fetch and format requested report", config: { endpoint: "/api/reports/generate" }, nextSteps: ["s6"] },
-      { id: "s6", type: "message", label: "Deliver Report", description: "Send report via WhatsApp", config: { template: "report_delivery" }, nextSteps: ["s7"] },
-      { id: "s7", type: "end", label: "Flow Complete", description: "Report delivered", nextSteps: [] },
-      { id: "s8", type: "message", label: "Access Denied", description: "Inform user of insufficient permissions", config: { template: "access_denied" }, nextSteps: ["s9"] },
-      { id: "s9", type: "end", label: "Flow End", description: "Unauthorized access blocked", nextSteps: [] },
-    ],
-  },
+    tags: ["appointments", "scheduling", "booking"],
+    flow: {
+      schema_version: "1.0.0",
+      flow_uid: "book-appt-001",
+      entry_node_id: "n_11000_1",
+      meta: {
+        name: "Appointment Booking Flow",
+        description: "Schedule appointments"
+      },
+      nodes: [
+        {
+          id: "n_11000_1",
+          type: "trigger.inbound_message",
+          position: { x: 100, y: 50 },
+          data: {
+            label: "Inbound Message",
+            config: {
+              match_mode: "keyword",
+              keywords: ["book", "appointment", "schedule", "meeting"],
+              case_sensitive: false
+            },
+            outputs: [{ key: "out", label: "Match" }]
+          }
+        },
+        {
+          id: "n_11000_2",
+          type: "message.compose",
+          position: { x: 100, y: 200 },
+          data: {
+            label: "Select Service",
+            config: {
+              body_text: "What would you like to book?",
+              header_text: "Book Appointment",
+              footer_text: "Select service",
+              interactive_type: "button",
+              buttons: [
+                { id: "btn_consult", title: "Consultation" },
+                { id: "btn_demo", title: "Demo" },
+                { id: "btn_support", title: "Support Call" }
+              ],
+              list_data: null,
+              media_url: "",
+              media_type: "",
+              media_filename: ""
+            },
+            outputs: [
+              { key: "btn_consult", label: "Consultation" },
+              { key: "btn_demo", label: "Demo" },
+              { key: "btn_support", label: "Support" }
+            ]
+          }
+        },
+        {
+          id: "n_11000_3",
+          type: "message.compose",
+          position: { x: 100, y: 400 },
+          data: {
+            label: "Select Time",
+            config: {
+              body_text: "Select your preferred time slot:",
+              header_text: "Choose Time",
+              footer_text: "Select slot",
+              interactive_type: "button",
+              buttons: [
+                { id: "btn_morning", title: "10:00 AM" },
+                { id: "btn_afternoon", title: "2:00 PM" },
+                { id: "btn_evening", title: "5:00 PM" }
+              ],
+              list_data: null,
+              media_url: "",
+              media_type: "",
+              media_filename: ""
+            },
+            outputs: [
+              { key: "btn_morning", label: "Morning" },
+              { key: "btn_afternoon", label: "Afternoon" },
+              { key: "btn_evening", label: "Evening" }
+            ]
+          }
+        },
+        {
+          id: "n_11000_4",
+          type: "message.compose",
+          position: { x: 100, y: 580 },
+          data: {
+            label: "Confirmation",
+            config: {
+              body_text: "Your appointment has been scheduled! You'll receive a reminder 1 hour before. To reschedule, reply with 'RESCHEDULE'.",
+              header_text: "Booked!",
+              footer_text: "",
+              interactive_type: "none",
+              buttons: [],
+              list_data: null,
+              media_url: "",
+              media_type: "",
+              media_filename: ""
+            },
+            outputs: [{ key: "out", label: "Next" }]
+          }
+        },
+        {
+          id: "n_11000_5",
+          type: "action.tag_contact",
+          position: { x: 100, y: 750 },
+          data: {
+            label: "Tag Booked",
+            config: { tag: "appointment-booked" },
+            outputs: [{ key: "out", label: "Next" }]
+          }
+        },
+        {
+          id: "n_11000_6",
+          type: "control.end",
+          position: { x: 100, y: 900 },
+          data: {
+            label: "End",
+            config: { result: "completed" },
+            outputs: []
+          }
+        }
+      ],
+      edges: [
+        { id: "e_12000_1", source: "n_11000_1", target: "n_11000_2", sourceHandle: "out", targetHandle: "in", condition: { type: "always" }, priority: 0 },
+        { id: "e_12000_2", source: "n_11000_2", target: "n_11000_3", sourceHandle: "btn_consult", targetHandle: "in", condition: { type: "always" }, priority: 0 },
+        { id: "e_12000_3", source: "n_11000_2", target: "n_11000_3", sourceHandle: "btn_demo", targetHandle: "in", condition: { type: "always" }, priority: 0 },
+        { id: "e_12000_4", source: "n_11000_2", target: "n_11000_3", sourceHandle: "btn_support", targetHandle: "in", condition: { type: "always" }, priority: 0 },
+        { id: "e_12000_5", source: "n_11000_3", target: "n_11000_4", sourceHandle: "btn_morning", targetHandle: "in", condition: { type: "always" }, priority: 0 },
+        { id: "e_12000_6", source: "n_11000_3", target: "n_11000_4", sourceHandle: "btn_afternoon", targetHandle: "in", condition: { type: "always" }, priority: 0 },
+        { id: "e_12000_7", source: "n_11000_3", target: "n_11000_4", sourceHandle: "btn_evening", targetHandle: "in", condition: { type: "always" }, priority: 0 },
+        { id: "e_12000_8", source: "n_11000_4", target: "n_11000_5", sourceHandle: "out", targetHandle: "in", condition: { type: "always" }, priority: 0 },
+        { id: "e_12000_9", source: "n_11000_5", target: "n_11000_6", sourceHandle: "out", targetHandle: "in", condition: { type: "always" }, priority: 0 }
+      ],
+      variables: {},
+      settings: {
+        max_hops_per_message: 20,
+        fallback_behavior: "legacy_advance_bot",
+        timezone: "Asia/Kolkata"
+      },
+      ui: {
+        viewport: { x: 0, y: 0, zoom: 1 }
+      }
+    }
+  }
 ];
 
-// Step type icons and colors
-const stepTypeConfig: Record<string, { icon: React.ElementType; color: string; bgColor: string }> = {
-  trigger: { icon: Zap, color: "text-yellow-600", bgColor: "bg-yellow-50" },
-  condition: { icon: ArrowRight, color: "text-purple-600", bgColor: "bg-purple-50" },
-  action: { icon: Settings, color: "text-blue-600", bgColor: "bg-blue-50" },
-  message: { icon: MessageCircle, color: "text-green-600", bgColor: "bg-green-50" },
-  api_call: { icon: Building2, color: "text-indigo-600", bgColor: "bg-indigo-50" },
-  wait: { icon: Pause, color: "text-orange-600", bgColor: "bg-orange-50" },
-  end: { icon: CheckCircle2, color: "text-emerald-600", bgColor: "bg-emerald-50" },
+// Missing Calendar import
+const Calendar = Building2;
+
+// Node type icons and colors
+const nodeTypeConfig: Record<string, { icon: React.ElementType; color: string; bgColor: string; label: string }> = {
+  "trigger.inbound_message": { icon: Zap, color: "text-yellow-600", bgColor: "bg-yellow-50", label: "Trigger" },
+  "message.compose": { icon: MessageCircle, color: "text-green-600", bgColor: "bg-green-50", label: "Message" },
+  "logic.condition": { icon: ArrowRight, color: "text-purple-600", bgColor: "bg-purple-50", label: "Condition" },
+  "action.set_variable": { icon: Settings, color: "text-blue-600", bgColor: "bg-blue-50", label: "Set Var" },
+  "action.tag_contact": { icon: Tag, color: "text-indigo-600", bgColor: "bg-indigo-50", label: "Tag" },
+  "control.wait": { icon: Pause, color: "text-orange-600", bgColor: "bg-orange-50", label: "Wait" },
+  "control.end": { icon: CheckCircle2, color: "text-emerald-600", bgColor: "bg-emerald-50", label: "End" },
 };
+
+// Tag icon component
+const Tag = ({ className }: { className?: string }) => (
+  <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M12 2H2v10l9.29 9.29c.94.94 2.48.94 3.42 0l6.58-6.58c.94-.94.94-2.48 0-3.42L12 2Z" />
+    <path d="M7 7h.01" />
+  </svg>
+);
 
 // Complexity badge colors
 const complexityColors: Record<string, string> = {
@@ -436,16 +1727,31 @@ const complexityColors: Record<string, string> = {
   advanced: "bg-red-100 text-red-700 border-red-200",
 };
 
-// Flow Card Component
-function FlowCard({ flow, isExpanded, onToggle }: { flow: ChatbotFlow; isExpanded: boolean; onToggle: () => void }) {
-  const category = flowCategories.find(c => c.id === flow.category);
+// Flow Library Card Component
+function FlowLibraryCard({ 
+  item, 
+  isExpanded, 
+  onToggle 
+}: { 
+  item: FlowLibraryItem; 
+  isExpanded: boolean; 
+  onToggle: () => void;
+}) {
+  const category = flowCategories.find(c => c.id === item.category);
   const [copied, setCopied] = useState(false);
 
-  const handleCopy = () => {
-    navigator.clipboard.writeText(JSON.stringify(flow, null, 2));
+  const handleCopyJSON = () => {
+    navigator.clipboard.writeText(JSON.stringify(item.flow, null, 2));
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
+
+  // Count nodes by type
+  const nodeCounts = item.flow.nodes.reduce((acc, node) => {
+    const type = node.type;
+    acc[type] = (acc[type] || 0) + 1;
+    return acc;
+  }, {} as Record<string, number>);
 
   return (
     <Card className="group hover:shadow-lg transition-all duration-300">
@@ -458,35 +1764,39 @@ function FlowCard({ flow, isExpanded, onToggle }: { flow: ChatbotFlow; isExpande
               </div>
             )}
             <Badge variant="outline" className="text-[10px]">
-              {category?.name || flow.category}
+              {category?.name || item.category}
             </Badge>
           </div>
-          <Badge className={complexityColors[flow.complexity]}>
-            {flow.complexity}
+          <Badge className={complexityColors[item.complexity]}>
+            {item.complexity}
           </Badge>
         </div>
-        <CardTitle className="text-base font-semibold mt-2">{flow.name}</CardTitle>
-        <CardDescription className="text-xs">{flow.description}</CardDescription>
+        <CardTitle className="text-base font-semibold mt-2">{item.name}</CardTitle>
+        <CardDescription className="text-xs">{item.description}</CardDescription>
       </CardHeader>
       
       <CardContent className="space-y-3">
-        {/* Quick Info */}
-        <div className="grid grid-cols-2 gap-2 text-xs">
+        {/* Quick Stats */}
+        <div className="grid grid-cols-3 gap-2 text-xs">
           <div className="flex items-center gap-1.5 text-text-muted">
-            <Play className="h-3 w-3" />
-            <span>{flow.estimatedTime}</span>
+            <Code className="h-3 w-3" />
+            <span>{item.flow.nodes.length} nodes</span>
           </div>
           <div className="flex items-center gap-1.5 text-text-muted">
-            <Settings className="h-3 w-3" />
-            <span>{flow.steps.length} steps</span>
+            <ArrowRight className="h-3 w-3" />
+            <span>{item.flow.edges.length} edges</span>
+          </div>
+          <div className="flex items-center gap-1.5 text-text-muted">
+            <Zap className="h-3 w-3" />
+            <span>v{item.flow.schema_version}</span>
           </div>
         </div>
 
-        {/* Triggers */}
+        {/* Tags */}
         <div className="flex flex-wrap gap-1">
-          {flow.triggers.slice(0, 2).map((trigger, idx) => (
+          {item.tags.slice(0, 3).map((tag, idx) => (
             <Badge key={idx} variant="secondary" className="text-[10px]">
-              {trigger}
+              {tag}
             </Badge>
           ))}
         </div>
@@ -513,57 +1823,38 @@ function FlowCard({ flow, isExpanded, onToggle }: { flow: ChatbotFlow; isExpande
               {/* Use Case */}
               <div className="p-3 bg-surface rounded-lg">
                 <p className="text-xs font-medium text-text-primary mb-1">Use Case</p>
-                <p className="text-xs text-text-secondary">{flow.useCase}</p>
+                <p className="text-xs text-text-secondary">{item.useCase}</p>
               </div>
 
-              {/* ERP Module */}
-              <div className="flex items-center gap-2 text-xs">
-                <Building2 className="h-3 w-3 text-brand-primary" />
-                <span className="text-text-muted">Module:</span>
-                <span className="font-medium text-text-primary">{flow.erpModule}</span>
-              </div>
-
-              {/* Flow Steps */}
+              {/* Flow Structure */}
               <div className="space-y-2">
-                <p className="text-xs font-medium text-text-primary">Flow Steps</p>
-                <div className="space-y-1">
-                  {flow.steps.map((step, idx) => {
-                    const config = stepTypeConfig[step.type];
+                <p className="text-xs font-medium text-text-primary">Flow Structure</p>
+                <div className="grid grid-cols-2 gap-2">
+                  {Object.entries(nodeCounts).map(([type, count]) => {
+                    const config = nodeTypeConfig[type];
+                    if (!config) return null;
                     const IconComponent = config.icon;
                     return (
                       <div 
-                        key={step.id}
+                        key={type}
                         className={`flex items-center gap-2 p-2 rounded-lg ${config.bgColor} border border-border/30`}
                       >
-                        <div className="flex items-center gap-2 flex-1">
-                          <div className="flex items-center justify-center h-5 w-5 rounded-full bg-white text-[10px] font-bold text-text-muted border border-border/50">
-                            {idx + 1}
-                          </div>
-                          <IconComponent className={`h-3.5 w-3.5 ${config.color}`} />
-                          <div className="flex-1">
-                            <p className="text-xs font-medium text-text-primary">{step.label}</p>
-                            <p className="text-[10px] text-text-muted">{step.description}</p>
-                          </div>
-                        </div>
-                        <Badge variant="outline" className="text-[9px] capitalize">
-                          {step.type.replace("_", " ")}
-                        </Badge>
+                        <IconComponent className={`h-3.5 w-3.5 ${config.color}`} />
+                        <span className="text-xs font-medium text-text-primary">{config.label}</span>
+                        <Badge variant="outline" className="text-[10px] ml-auto">{count}</Badge>
                       </div>
                     );
                   })}
                 </div>
               </div>
 
-              {/* Integrations */}
-              <div>
-                <p className="text-xs font-medium text-text-primary mb-2">Integrations</p>
-                <div className="flex flex-wrap gap-1">
-                  {flow.integrations.map((integration, idx) => (
-                    <Badge key={idx} variant="outline" className="text-[10px]">
-                      {integration}
-                    </Badge>
-                  ))}
-                </div>
+              {/* Flow UID */}
+              <div className="flex items-center gap-2 text-xs">
+                <Code className="h-3 w-3 text-brand-primary" />
+                <span className="text-text-muted">UID:</span>
+                <code className="font-mono text-text-primary bg-surface px-1.5 py-0.5 rounded text-[10px]">
+                  {item.flow.flow_uid}
+                </code>
               </div>
 
               {/* Actions */}
@@ -572,7 +1863,7 @@ function FlowCard({ flow, isExpanded, onToggle }: { flow: ChatbotFlow; isExpande
                   size="sm" 
                   variant="outline" 
                   className="flex-1 text-xs"
-                  onClick={handleCopy}
+                  onClick={handleCopyJSON}
                 >
                   {copied ? (
                     <>
@@ -603,7 +1894,7 @@ function FlowCard({ flow, isExpanded, onToggle }: { flow: ChatbotFlow; isExpande
 }
 
 export default function ChatbotFlowLibraryPage() {
-  const [activeCategory, setActiveCategory] = useState("sales-invoice");
+  const [activeCategory, setActiveCategory] = useState("welcome");
   const [expandedFlows, setExpandedFlows] = useState<Set<string>>(new Set());
 
   const toggleFlow = (flowId: string) => {
@@ -618,7 +1909,7 @@ export default function ChatbotFlowLibraryPage() {
     });
   };
 
-  const categoryFlows = chatbotFlows.filter(f => f.category === activeCategory);
+  const categoryFlows = flowLibrary.filter(f => f.category === activeCategory);
   const activeCategoryData = flowCategories.find(c => c.id === activeCategory);
 
   return (
@@ -632,32 +1923,28 @@ export default function ChatbotFlowLibraryPage() {
             <div className="text-center max-w-3xl mx-auto">
               <Badge variant="secondary" className="mb-4 px-3 py-1 text-sm font-medium">
                 <Bot className="h-3.5 w-3.5 mr-1.5 text-brand-primary" />
-                Chatbot Flow Library
+                Flow Builder Library
               </Badge>
               <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-text-primary tracking-tight mb-4">
-                ERP Chatbot Flow
+                BotMaster Flow
                 <span className="text-brand-primary"> Library</span>
               </h1>
               <p className="text-lg sm:text-xl text-text-secondary mb-8 max-w-2xl mx-auto">
-                Pre-built conversational flows for Busy Accounting Software integration. 
-                Automate sales, purchases, payments, and more with WhatsApp chatbots.
+                Pre-built chatbot flow templates ready to import. Each flow follows the BotMaster JSON schema 
+                for seamless integration with Whats91 Flow Builder.
               </p>
               <div className="flex flex-wrap items-center justify-center gap-4 text-sm text-text-secondary">
                 <div className="flex items-center gap-2">
-                  <FileText className="h-4 w-4 text-blue-500" />
-                  <span>Sales Invoice</span>
+                  <Code className="h-4 w-4 text-blue-500" />
+                  <span>JSON Schema v1.0</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <ShoppingCart className="h-4 w-4 text-purple-500" />
-                  <span>Sales Order</span>
+                  <Copy className="h-4 w-4 text-purple-500" />
+                  <span>Copy & Import</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <DollarSign className="h-4 w-4 text-green-500" />
-                  <span>Payments</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <BarChart3 className="h-4 w-4 text-rose-500" />
-                  <span>Reports</span>
+                  <Zap className="h-4 w-4 text-yellow-500" />
+                  <span>Ready to Use</span>
                 </div>
               </div>
             </div>
@@ -669,20 +1956,20 @@ export default function ChatbotFlowLibraryPage() {
           <div className="px-4 sm:px-6 lg:px-8 max-w-[1200px] mx-auto">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <div className="text-center">
-                <p className="text-3xl font-bold text-brand-primary">{chatbotFlows.length}+</p>
-                <p className="text-sm text-text-secondary">Flows</p>
+                <p className="text-3xl font-bold text-brand-primary">{flowLibrary.length}+</p>
+                <p className="text-sm text-text-secondary">Flow Templates</p>
               </div>
               <div className="text-center">
                 <p className="text-3xl font-bold text-brand-primary">{flowCategories.length}</p>
                 <p className="text-sm text-text-secondary">Categories</p>
               </div>
               <div className="text-center">
-                <p className="text-3xl font-bold text-brand-primary">100%</p>
-                <p className="text-sm text-text-secondary">Busy Compatible</p>
+                <p className="text-3xl font-bold text-brand-primary">v1.0</p>
+                <p className="text-sm text-text-secondary">Schema Version</p>
               </div>
               <div className="text-center">
                 <p className="text-3xl font-bold text-brand-primary">24/7</p>
-                <p className="text-sm text-text-secondary">Automation</p>
+                <p className="text-sm text-text-secondary">Automation Ready</p>
               </div>
             </div>
           </div>
@@ -693,8 +1980,8 @@ export default function ChatbotFlowLibraryPage() {
           <div className="px-4 sm:px-6 lg:px-8 max-w-[1200px] mx-auto">
             {/* Category Navigation */}
             <div className="mb-8">
-              <h2 className="text-lg font-semibold text-text-primary mb-4">Select ERP Category</h2>
-              <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-2">
+              <h2 className="text-lg font-semibold text-text-primary mb-4">Select Category</h2>
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
                 {flowCategories.map((category) => (
                   <button
                     key={category.id}
@@ -736,12 +2023,12 @@ export default function ChatbotFlowLibraryPage() {
             {/* Flow Cards */}
             <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
               {categoryFlows.length > 0 ? (
-                categoryFlows.map((flow) => (
-                  <FlowCard
-                    key={flow.id}
-                    flow={flow}
-                    isExpanded={expandedFlows.has(flow.id)}
-                    onToggle={() => toggleFlow(flow.id)}
+                categoryFlows.map((item) => (
+                  <FlowLibraryCard
+                    key={item.id}
+                    item={item}
+                    isExpanded={expandedFlows.has(item.id)}
+                    onToggle={() => toggleFlow(item.id)}
                   />
                 ))
               ) : (
@@ -754,16 +2041,15 @@ export default function ChatbotFlowLibraryPage() {
           </div>
         </section>
 
-        {/* How It Works */}
+        {/* How to Use */}
         <section className="py-12 bg-surface/50">
           <div className="px-4 sm:px-6 lg:px-8 max-w-[1200px] mx-auto">
             <div className="text-center mb-10">
               <h2 className="text-2xl sm:text-3xl font-bold text-text-primary mb-4">
-                How Chatbot Flows Work
+                How to Use Flow Templates
               </h2>
               <p className="text-text-secondary max-w-2xl mx-auto">
-                Each flow is a pre-designed conversation path that automates business processes
-                between your ERP system and WhatsApp.
+                Each flow template follows the BotMaster JSON schema and can be imported directly into the Flow Builder.
               </p>
             </div>
 
@@ -771,32 +2057,31 @@ export default function ChatbotFlowLibraryPage() {
               {[
                 {
                   step: 1,
-                  title: "Trigger Event",
-                  description: "Flow starts when a specific event occurs in Busy or a customer sends a message",
-                  icon: Zap,
+                  title: "Copy JSON",
+                  description: "Click 'Copy JSON' on any flow template to copy the complete flow definition to your clipboard.",
+                  icon: Copy,
                 },
                 {
                   step: 2,
-                  title: "Process & Route",
-                  description: "Flow executes steps, checks conditions, and calls API endpoints as needed",
-                  icon: Settings,
+                  title: "Import to Builder",
+                  description: "In Flow Builder, use 'Import Flow JSON' to paste and load the flow into your workspace.",
+                  icon: Code,
                 },
                 {
                   step: 3,
-                  title: "Deliver Response",
-                  description: "Customer receives appropriate WhatsApp message with data or action confirmation",
-                  icon: MessageCircle,
+                  title: "Customize & Deploy",
+                  description: "Modify messages, conditions, and actions to match your business needs, then activate.",
+                  icon: Play,
                 },
               ].map((item) => (
                 <div key={item.step} className="relative">
-                  <div className="flex items-center gap-4 p-5 rounded-xl bg-white border border-border/60 shadow-sm">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-full bg-brand-primary text-white font-bold text-lg shadow-md">
+                  <div className="flex flex-col items-center text-center">
+                    <div className="flex items-center justify-center h-12 w-12 rounded-full bg-brand-primary text-white font-bold text-lg mb-4">
                       {item.step}
                     </div>
-                    <div>
-                      <h3 className="font-semibold text-text-primary">{item.title}</h3>
-                      <p className="text-sm text-text-secondary mt-1">{item.description}</p>
-                    </div>
+                    <item.icon className="h-8 w-8 text-brand-primary mb-3" />
+                    <h3 className="text-base font-semibold text-text-primary mb-2">{item.title}</h3>
+                    <p className="text-sm text-text-secondary">{item.description}</p>
                   </div>
                 </div>
               ))}
@@ -804,61 +2089,62 @@ export default function ChatbotFlowLibraryPage() {
           </div>
         </section>
 
-        {/* Flow Components Reference */}
+        {/* Schema Info */}
         <section className="py-12">
           <div className="px-4 sm:px-6 lg:px-8 max-w-[1200px] mx-auto">
-            <div className="max-w-3xl mx-auto">
-              <h2 className="text-2xl font-bold text-text-primary mb-8 text-center">
-                Flow Step Types
-              </h2>
-
-              <div className="grid gap-3">
-                {Object.entries(stepTypeConfig).map(([type, config]) => {
-                  const IconComponent = config.icon;
-                  return (
-                    <div 
-                      key={type}
-                      className={`flex items-center gap-4 p-4 rounded-xl ${config.bgColor} border border-border/40`}
-                    >
-                      <div className="p-2 rounded-lg bg-white shadow-sm">
-                        <IconComponent className={`h-5 w-5 ${config.color}`} />
-                      </div>
-                      <div className="flex-1">
-                        <p className="font-medium text-text-primary capitalize">{type.replace("_", " ")}</p>
-                        <p className="text-sm text-text-secondary">
-                          {type === "trigger" && "Starts the flow when event occurs"}
-                          {type === "condition" && "Branches flow based on conditions"}
-                          {type === "action" && "Performs a system operation"}
-                          {type === "message" && "Sends a WhatsApp message"}
-                          {type === "api_call" && "Calls external API endpoint"}
-                          {type === "wait" && "Pauses for user input or time"}
-                          {type === "end" && "Terminates the flow"}
-                        </p>
-                      </div>
+            <Card className="border-border/40">
+              <CardHeader>
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <Code className="h-5 w-5 text-brand-primary" />
+                  BotMaster Flow JSON Schema
+                </CardTitle>
+                <CardDescription>
+                  All flows follow the v1.0.0 schema with proper node types and Meta WhatsApp API compliance
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                  {[
+                    { type: "trigger.inbound_message", label: "Trigger Node", desc: "Entry point for flows" },
+                    { type: "message.compose", label: "Message Node", desc: "Send WhatsApp messages" },
+                    { type: "logic.condition", label: "Condition Node", desc: "Branch logic" },
+                    { type: "action.set_variable", label: "Set Variable", desc: "Store data" },
+                    { type: "action.tag_contact", label: "Tag Contact", desc: "Label contacts" },
+                    { type: "control.wait", label: "Wait Node", desc: "Pause execution" },
+                    { type: "control.end", label: "End Node", desc: "Terminate flow" },
+                    { type: "edges", label: "Edge Connections", desc: "Link nodes together" },
+                  ].map((item) => (
+                    <div key={item.type} className="p-3 bg-surface rounded-lg border border-border/30">
+                      <p className="text-xs font-mono text-brand-primary mb-1">{item.type}</p>
+                      <p className="text-sm font-medium text-text-primary">{item.label}</p>
+                      <p className="text-xs text-text-muted">{item.desc}</p>
                     </div>
-                  );
-                })}
-              </div>
-            </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
           </div>
         </section>
 
         {/* CTA Section */}
-        <section className="py-16 bg-gradient-to-r from-brand-primary to-brand-primary-hover">
+        <section className="py-16 bg-gradient-to-r from-brand-primary/10 to-brand-primary/5">
           <div className="px-4 sm:px-6 lg:px-8 max-w-[1200px] mx-auto text-center">
-            <h2 className="text-2xl sm:text-3xl font-bold text-white mb-4">
-              Need Custom Chatbot Flows?
+            <h2 className="text-2xl sm:text-3xl font-bold text-text-primary mb-4">
+              Ready to Build Your First Flow?
             </h2>
-            <p className="text-white/90 mb-6 max-w-2xl mx-auto">
-              Our team can design and implement custom chatbot flows tailored to your 
-              specific ERP workflows and business requirements.
+            <p className="text-text-secondary mb-8 max-w-xl mx-auto">
+              Start with a template or create your own custom flow from scratch using our visual Flow Builder.
             </p>
-            <Button size="lg" variant="secondary" asChild className="bg-white text-brand-primary hover:bg-white/90">
-              <Link href="/contact">
-                Request Custom Flow
-                <ArrowRight className="ml-2 h-4 w-4" />
-              </Link>
-            </Button>
+            <div className="flex flex-wrap gap-4 justify-center">
+              <Button size="lg" className="bg-brand-primary text-white hover:bg-brand-primary/90">
+                <Play className="h-4 w-4 mr-2" />
+                Open Flow Builder
+              </Button>
+              <Button size="lg" variant="outline">
+                <BookOpen className="h-4 w-4 mr-2" />
+                View Documentation
+              </Button>
+            </div>
           </div>
         </section>
       </main>
