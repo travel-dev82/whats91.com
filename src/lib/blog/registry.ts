@@ -30,6 +30,23 @@ export interface BlogPostMeta {
 // All posts metadata - lightweight for listing page
 export const blogPosts: BlogPostMeta[] = [
   {
+    id: "5",
+    slug: "whatsapp-plus-launch-2026-premium-subscription-guide",
+    title: "WhatsApp+ Launch 2026: Everything You Need to Know About the New Premium Subscription",
+    excerpt: "Meta's first direct-to-consumer premium subscription for WhatsApp marks a pivotal shift in messaging monetization. Discover features, pricing, and what this means for businesses.",
+    category: "Industry Insights",
+    tags: ["WhatsApp+", "Premium Subscription", "Meta", "2026", "Features", "Pricing"],
+    authorId: "1",
+    publishedAt: "2026-03-06",
+    readingTime: 15,
+    isFeatured: true,
+    seo: {
+      title: "WhatsApp+ Launch 2026: Premium Subscription Features, Pricing & Guide",
+      description: "Complete guide to WhatsApp+ premium subscription launching March 2026. Learn about custom themes, 20 pinned chats, Meta AI features, pricing in India, and security benefits over unofficial mods.",
+      keywords: ["WhatsApp+ subscription", "WhatsApp premium 2026", "WhatsApp+ features", "WhatsApp+ pricing India", "WhatsApp themes", "Meta AI WhatsApp"],
+    },
+  },
+  {
     id: "4",
     slug: "whatsapp-web-6-hour-logout-unofficial-api-migration-guide",
     title: "WhatsApp Web 6-Hour Logout: Impact on Unofficial APIs & Complete Migration Guide",
