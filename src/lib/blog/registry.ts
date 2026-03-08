@@ -30,6 +30,23 @@ export interface BlogPostMeta {
 // All posts metadata - lightweight for listing page
 export const blogPosts: BlogPostMeta[] = [
   {
+    id: "6",
+    slug: "whatsapp-username-system-2026-complete-guide",
+    title: "WhatsApp Username System 2026: The Complete Guide to Sovereign Identity",
+    excerpt: "Meta is decoupling three billion users from phone numbers. Learn about BSUIDs, username PINs, developer migration paths, and what this means for businesses on WhatsApp Cloud API.",
+    category: "WhatsApp API",
+    tags: ["Username System", "BSUID", "Cloud API", "Privacy", "2026", "Developer"],
+    authorId: "1",
+    publishedAt: "2026-03-06",
+    readingTime: 18,
+    isFeatured: true,
+    seo: {
+      title: "WhatsApp Username System 2026: BSUID, PINs & Cloud API Migration Guide",
+      description: "Complete guide to WhatsApp's 2026 username system. Learn about Business-Scoped User IDs (BSUID), username PIN security, 100K messaging limits, and developer migration strategies.",
+      keywords: ["WhatsApp username 2026", "BSUID WhatsApp", "WhatsApp username PIN", "WhatsApp Cloud API migration", "WhatsApp identity system", "WhatsApp phone number alternative"],
+    },
+  },
+  {
     id: "5",
     slug: "whatsapp-plus-launch-2026-premium-subscription-guide",
     title: "WhatsApp+ Launch 2026: Everything You Need to Know About the New Premium Subscription",
