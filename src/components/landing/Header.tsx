@@ -159,7 +159,7 @@ export function Header() {
               <Link href="/whatsapp-templates">Templates</Link>
             </Button>
             <Button asChild className="bg-brand-primary text-brand-primary-foreground hover:bg-brand-primary-hover text-sm font-medium shadow-md shadow-brand-primary/20 hover:shadow-lg hover:shadow-brand-primary/25 transition-all duration-300">
-              <Link href="/contact">Get Started</Link>
+              <a href="https://chat.whats91.com" target="_blank" rel="noopener noreferrer">Get Started</a>
             </Button>
           </div>
 
@@ -231,7 +231,7 @@ export function Header() {
                     <Link href="/whatsapp-templates">WhatsApp Templates</Link>
                   </Button>
                   <Button asChild className="w-full h-10 bg-brand-primary text-brand-primary-foreground hover:bg-brand-primary-hover font-medium shadow-md shadow-brand-primary/20">
-                    <Link href="/contact">Get Started</Link>
+                    <a href="https://chat.whats91.com" target="_blank" rel="noopener noreferrer">Get Started</a>
                   </Button>
                 </div>
                 <div className="flex items-center justify-center gap-2 mt-4">
