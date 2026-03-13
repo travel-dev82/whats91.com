@@ -14,6 +14,9 @@ export const metadata: Metadata = {
   ],
   alternates: {
     canonical: `${siteConfig.url}/blog`,
+    types: {
+      "application/rss+xml": `${siteConfig.url}/feed.xml`,
+    },
   },
   openGraph: {
     title: "Whats91 Blog - WhatsApp API Insights & Enterprise Communication",
