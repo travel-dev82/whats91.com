@@ -7,6 +7,10 @@
 # ============================================
 Sitemap: https://whats91.com/sitemap.xml
 
+# RSS/Atom Feed for content syndication
+# Google Search Console: Add this as a feed for blog updates
+Sitemap: https://whats91.com/feed.xml
+
 # ============================================
 # AI TRAINING CRAWLERS
 # ============================================

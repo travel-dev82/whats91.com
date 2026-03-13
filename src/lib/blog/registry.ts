@@ -30,6 +30,23 @@ export interface BlogPostMeta {
 // All posts metadata - lightweight for listing page
 export const blogPosts: BlogPostMeta[] = [
   {
+    id: "7",
+    slug: "whatsapp-graph-api-v24-to-v25-transition-guide",
+    title: "WhatsApp Graph API v24 to v25: Complete Migration Guide for Enterprise",
+    excerpt: "The definitive analysis of Meta's Graph API transition. Learn about BSUID, Cloud API consolidation, 100K messaging baseline, pricing changes, and actionable migration strategies.",
+    category: "WhatsApp API",
+    tags: ["Graph API", "Cloud API", "BSUID", "Migration", "2026", "Developer"],
+    authorId: "1",
+    publishedAt: "2026-03-13",
+    readingTime: 20,
+    isFeatured: true,
+    seo: {
+      title: "WhatsApp Graph API v24 to v25 Migration Guide | BSUID, Cloud API, 100K Baseline",
+      description: "Complete guide to migrating from WhatsApp Graph API v24.0 to v25.0. Learn about BSUID identity, Cloud API consolidation, 100K messaging limits, pricing changes, and developer optimization strategies.",
+      keywords: ["WhatsApp Graph API v25", "BSUID migration", "WhatsApp Cloud API 2026", "100K messaging limit", "WhatsApp API pricing", "Graph API migration guide"],
+    },
+  },
+  {
     id: "6",
     slug: "whatsapp-username-system-2026-complete-guide",
     title: "WhatsApp Username System 2026: The Complete Guide to Sovereign Identity",
