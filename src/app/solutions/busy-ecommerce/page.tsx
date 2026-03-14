@@ -260,9 +260,12 @@ export default function BusyEcommercePage() {
                   <Button
                     size="lg"
                     className="h-12 px-7 text-base font-semibold rounded-xl bg-brand-primary text-brand-primary-foreground hover:bg-brand-primary-hover shadow-lg shadow-brand-primary/25 group"
+                    asChild
                   >
-                    Book a 15-Minute Demo
-                    <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-0.5" />
+                    <Link href="/contact">
+                      Book a 15-Minute Demo
+                      <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-0.5" />
+                    </Link>
                   </Button>
                   <Button
                     size="lg"
