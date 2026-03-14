@@ -268,8 +268,11 @@ export default function BusyEcommercePage() {
                     size="lg"
                     variant="outline"
                     className="h-12 px-7 text-base font-semibold rounded-xl border-border/80 hover:bg-surface"
+                    asChild
                   >
-                    See Live Demo
+                    <a href="https://demo.busynotify.in" target="_blank" rel="noopener noreferrer">
+                      See Live Demo
+                    </a>
                   </Button>
                 </div>
 
