@@ -22,6 +22,7 @@ import {
   CreditCard,
   Sheet as SheetIcon,
   Zap,
+  ShoppingCart,
 } from "lucide-react";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
@@ -45,6 +46,13 @@ const solutions = [
     href: "/solutions/busy-erp",
     description: "Automate invoices, payment reminders, and ledger inquiries from WhatsApp.",
     icon: Database,
+    featured: true,
+  },
+  {
+    title: "Busy E-Commerce",
+    href: "/solutions/busy-ecommerce",
+    description: "White-label B2B/B2C storefront with 10-minute Busy sync engine.",
+    icon: ShoppingCart,
     featured: true,
   },
   {

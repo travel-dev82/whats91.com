@@ -126,6 +126,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: "weekly",
       priority: 0.8,
     },
+    {
+      url: `${baseUrl}/solutions/busy-ecommerce`,
+      lastModified: currentDate,
+      changeFrequency: "weekly",
+      priority: 0.95,
+    },
   ];
 
   // ============================================
