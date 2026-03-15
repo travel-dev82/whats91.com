@@ -30,6 +30,23 @@ export interface BlogPostMeta {
 // All posts metadata - lightweight for listing page
 export const blogPosts: BlogPostMeta[] = [
   {
+    id: "8",
+    slug: "busy-erp-google-sheets-integration-complete-guide",
+    title: "Busy ERP to Google Sheets Integration: Complete Guide for Enterprise Data Liberation",
+    excerpt: "Discover how syncing Busy Accounting Software data to Google Sheets transforms static record-keeping into a dynamic automation engine. Learn advanced reporting, CRM integration, and WhatsApp workflow automation.",
+    category: "ERP Integration",
+    tags: ["Busy ERP", "Google Sheets", "Integration", "Automation", "WhatsApp"],
+    authorId: "1",
+    publishedAt: "2026-03-15",
+    readingTime: 22,
+    isFeatured: true,
+    seo: {
+      title: "Busy ERP to Google Sheets Integration Guide | Automation, Dashboards, CRM Sync",
+      description: "Complete guide to integrating Busy Accounting Software with Google Sheets. Learn advanced business intelligence dashboards, CRM migration (Salesforce, Zoho), WhatsApp automation, and security best practices.",
+      keywords: ["Busy ERP to Google Sheet integration", "Google Sheet add-on for Busy Accounting Software", "Busy software Excel export", "Automate WhatsApp from Busy ERP", "Live inventory tracking in spreadsheets", "Busy ERP CRM integration", "Google Sheets ERP dashboard"],
+    },
+  },
+  {
     id: "7",
     slug: "whatsapp-graph-api-v24-to-v25-transition-guide",
     title: "WhatsApp Graph API v24 to v25: Complete Migration Guide for Enterprise",
