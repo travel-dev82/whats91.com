@@ -26,6 +26,8 @@ const footerLinks = {
     { label: "Marketing & Engagement", href: "/solutions/marketing" },
     { label: "Utility Messages", href: "/solutions/utility" },
     { label: "Busy ERP Integration", href: "/solutions/busy-erp" },
+    { label: "Busy E-Commerce", href: "/solutions/busy-ecommerce", featured: true },
+    { label: "Busy AI Agent", href: "/solutions/busy-ai-agent", featured: true },
     { label: "Busy API", href: "/solutions/busy-api" },
     { label: "Busy Reports", href: "/solutions/busy-reports" },
     { label: "Payment Reminders", href: "/solutions/payment-reminders" },

@@ -23,6 +23,7 @@ import {
   Sheet as SheetIcon,
   Zap,
   ShoppingCart,
+  Bot,
 } from "lucide-react";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
@@ -53,6 +54,13 @@ const solutions = [
     href: "/solutions/busy-ecommerce",
     description: "White-label B2B/B2C storefront with 10-minute Busy sync engine.",
     icon: ShoppingCart,
+    featured: true,
+  },
+  {
+    title: "Busy AI Agent",
+    href: "/solutions/busy-ai-agent",
+    description: "Autonomous AI-powered payment recovery via WhatsApp with 98% open rate.",
+    icon: Bot,
     featured: true,
   },
   {
