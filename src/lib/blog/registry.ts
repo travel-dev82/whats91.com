@@ -30,6 +30,23 @@ export interface BlogPostMeta {
 // All posts metadata - lightweight for listing page
 export const blogPosts: BlogPostMeta[] = [
   {
+    id: "9",
+    slug: "whatsapp-cloud-api-restrictions-coexistence-framework-2026",
+    title: "WhatsApp Cloud API Restrictions & Coexistence Framework: Complete 2026 Guide",
+    excerpt: "Master the 24-hour and 48-hour restrictions, portfolio-level messaging limits, quality ratings, and the hybrid Coexistence Mode. Learn why chatbots get restricted and how to maintain Connected status.",
+    category: "WhatsApp API",
+    tags: ["WhatsApp API", "Cloud API", "Coexistence", "Restrictions", "2026"],
+    authorId: "1",
+    publishedAt: "2026-03-20",
+    readingTime: 25,
+    isFeatured: true,
+    seo: {
+      title: "WhatsApp Cloud API Restrictions & Coexistence Framework Guide 2026",
+      description: "Complete guide to WhatsApp Cloud API restrictions, portfolio-level messaging limits, quality ratings, Coexistence Mode, AI policy changes, and best practices for maintaining Connected status in 2026.",
+      keywords: ["WhatsApp Cloud API restrictions", "WhatsApp Coexistence Mode", "WhatsApp 24-hour restriction", "WhatsApp Quality Rating", "WhatsApp messaging limits 2026", "WhatsApp AI policy", "WhatsApp portfolio pacing"],
+    },
+  },
+  {
     id: "8",
     slug: "busy-erp-google-sheets-integration-complete-guide",
     title: "Busy ERP to Google Sheets Integration: Complete Guide for Enterprise Data Liberation",
