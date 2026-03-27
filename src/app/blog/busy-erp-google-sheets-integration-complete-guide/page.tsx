@@ -35,11 +35,14 @@ import {
   Bot,
   Layers,
   Code2,
+  HelpCircle,
+  Link2,
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { useState } from "react";
 import Link from "next/link";
 import { getRelatedPosts, categoryColors } from "@/lib/blog/registry";
+import Script from "next/script";
 
 function FadeIn({ children, delay = 0 }: { children: React.ReactNode; delay?: number }) {
   return (
@@ -170,8 +173,76 @@ const securityLayers = [
 export default function BusyERPGoogleSheetsIntegrationGuide() {
   const postSlug = "busy-erp-google-sheets-integration-complete-guide";
 
+  // FAQ Schema for SEO
+  const faqSchema = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "How to export data from Busy ERP to Google Sheets?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "You can export data from Busy ERP to Google Sheets using multiple methods: (1) Use Google Apps Script to connect directly to Busy's database via API, (2) Deploy middleware solutions like the Whats91 Busy Google Sheets integration platform for automated syncing, or (3) Use scheduled CSV exports from Busy combined with Google Sheets IMPORTRANGE function. The most reliable approach is using a dedicated integration platform that handles real-time synchronization automatically."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Does Busy ERP support API integration?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Yes, Busy ERP supports API integration for data extraction and synchronization. The Busy API allows developers to access financial data, inventory records, sales transactions, and customer information programmatically. This enables real-time Busy ERP automation and integration with external systems like Google Sheets, CRMs, and WhatsApp platforms."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Can I automate WhatsApp messages using Busy ERP data?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Absolutely! By integrating Busy Accounting Google Sheets with WhatsApp Cloud API, you can automate customer communications. Common use cases include sending order confirmations, invoice PDFs, payment reminders, and balance inquiries. When data syncs from Busy to Google Sheets, webhook triggers can send automated WhatsApp messages to customers."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Is Google Sheets suitable for ERP reporting?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Google Sheets is highly suitable for ERP reporting, especially for SMEs using Busy Accounting Software. It offers real-time collaboration, customizable dashboards, formula-based analytics, and easy sharing with stakeholders. While Google Sheets has row limits (10 million cells), it's ideal for most SME reporting needs."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "What data can be synced from Busy ERP to Google Sheets?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Key data modules that can be synced include: Financial Accounting (ledgers, trial balance, P&L, Balance Sheet), Inventory Management (stock status, batch details, godown data), Sales & Purchase (quotations, orders, challans, invoices), Outstanding Analysis (bill-by-bill tracking, ageing reports), GST Compliance (GSTR-1, GSTR-3B data), and Payroll/Operations data."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "How often can Busy ERP data sync to Google Sheets?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Sync frequency depends on your integration method. Real-time sync is possible with webhook-based integrations. For Google Apps Script triggers, you can set updates every 10-15 minutes. Most businesses find 15-minute intervals optimal for balancing data freshness with API rate limits."
+        }
+      }
+    ]
+  };
+
   return (
     <div className="min-h-screen flex flex-col bg-background">
+      {/* Meta Description and FAQ Schema */}
+      <head>
+        <meta name="description" content="Learn how to connect Busy ERP with Google Sheets for real-time reporting, automation, CRM integration, and WhatsApp workflows. Complete step-by-step guide for 2026." />
+        <meta name="keywords" content="Busy ERP Google Sheets integration, Busy Accounting Google Sheets, Busy ERP data export, Busy ERP automation, Busy WhatsApp integration" />
+      </head>
+      
+      <Script
+        id="faq-schema"
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
+      />
+      
       <Header />
       
       <main className="flex-1">
@@ -199,8 +270,14 @@ export default function BusyERPGoogleSheetsIntegrationGuide() {
 
             <FadeIn delay={0.2}>
               <h1 className="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-bold tracking-tight text-text-primary mb-5 leading-tight">
-                Busy ERP to Google Sheets Integration: Complete Guide for Enterprise Data Liberation
+                Busy ERP Google Sheets Integration (Step-by-Step Guide + Automation)
               </h1>
+            </FadeIn>
+
+            <FadeIn delay={0.25}>
+              <p className="text-base sm:text-lg text-text-secondary mb-4 leading-relaxed max-w-3xl font-medium">
+                <strong className="text-text-primary">Busy ERP Google Sheets integration</strong> allows businesses to automatically sync accounting, inventory, and sales data from Busy Accounting Software into Google Sheets. This enables real-time reporting, automation, CRM integration, and WhatsApp-based workflows.
+              </p>
             </FadeIn>
 
             <FadeIn delay={0.3}>
@@ -285,6 +362,47 @@ export default function BusyERPGoogleSheetsIntegrationGuide() {
                     </li>
                   ))}
                 </ul>
+              </div>
+            </FadeIn>
+          </div>
+        </section>
+
+        {/* Featured Snippet Section */}
+        <section className="pb-8">
+          <div className="px-4 sm:px-6 lg:px-8 max-w-4xl mx-auto">
+            <FadeIn>
+              <div className="rounded-2xl border border-brand-primary/30 bg-gradient-to-br from-brand-primary/5 to-transparent p-6">
+                <div className="flex items-start gap-3">
+                  <Database className="h-6 w-6 text-brand-primary shrink-0 mt-1" />
+                  <div>
+                    <h2 className="text-xl font-bold text-text-primary mb-3">What is Busy ERP Google Sheets Integration?</h2>
+                    <p className="text-text-secondary leading-relaxed">
+                      <strong className="text-text-primary">Busy ERP Google Sheets integration</strong> is a process that syncs data from Busy Accounting Software into Google Sheets, enabling automation, reporting, and real-time business insights. This integration allows businesses to export financial data, inventory levels, sales records, and customer information from Busy ERP directly into Google Sheets for advanced analysis, dashboard creation, and automated workflows.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </FadeIn>
+          </div>
+        </section>
+
+        {/* Early CTA Block */}
+        <section className="pb-8">
+          <div className="px-4 sm:px-6 lg:px-8 max-w-4xl mx-auto">
+            <FadeIn>
+              <div className="rounded-2xl bg-gradient-to-br from-brand-primary to-brand-primary/80 p-6 text-white">
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                  <div className="text-center sm:text-left">
+                    <h3 className="font-bold text-lg mb-1">Ready to Connect Busy ERP with Google Sheets?</h3>
+                    <p className="text-sm text-white/80">Get started with our complete integration solution today.</p>
+                  </div>
+                  <Button asChild className="bg-white text-brand-primary hover:bg-white/90 shrink-0 font-semibold">
+                    <Link href="/solutions/busy-google-sheet">
+                      Explore Integration Solution
+                      <ArrowRight className="ml-2 h-4 w-4" />
+                    </Link>
+                  </Button>
+                </div>
               </div>
             </FadeIn>
           </div>
@@ -687,6 +805,73 @@ export default function BusyERPGoogleSheetsIntegrationGuide() {
               </div>
             </FadeIn>
 
+            {/* Step-by-Step Implementation */}
+            <FadeIn>
+              <div className="space-y-6">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-primary/10 text-brand-primary">
+                    <Link2 className="h-5 w-5" />
+                  </div>
+                  <h2 className="text-2xl sm:text-3xl font-bold text-text-primary">
+                    Step-by-Step Busy ERP to Google Sheets Integration
+                  </h2>
+                </div>
+                <p className="text-text-secondary leading-relaxed">
+                  Follow this comprehensive step-by-step guide to implement Busy ERP Google Sheets integration for your business. This process enables <strong className="text-text-primary">Busy ERP data export</strong> and <strong className="text-text-primary">Busy ERP automation</strong> for real-time business insights.
+                </p>
+
+                <div className="space-y-4">
+                  {[
+                    {
+                      step: 1,
+                      title: "Connect Busy ERP API or Database",
+                      description: "Establish a connection to Busy ERP through its API interface or direct database access. This forms the foundation for all data synchronization workflows."
+                    },
+                    {
+                      step: 2,
+                      title: "Extract Required Data (Sales, Inventory, Ledger)",
+                      description: "Identify and extract the specific data modules you need to sync—typically sales transactions, inventory levels, and financial ledgers for real-time reporting."
+                    },
+                    {
+                      step: 3,
+                      title: "Sync Data to Google Sheets using Apps Script or Middleware",
+                      description: "Use Google Apps Script for direct API integration or deploy middleware solutions like our Busy Google Sheets integration platform for automated data syncing."
+                    },
+                    {
+                      step: 4,
+                      title: "Automate Updates using Triggers or Cron Jobs",
+                      description: "Set up automated triggers in Google Apps Script or cron jobs to refresh your spreadsheet data at regular intervals (every 10-15 minutes recommended)."
+                    },
+                    {
+                      step: 5,
+                      title: "Connect Google Sheets to WhatsApp API or CRM Tools",
+                      description: "Extend your integration by connecting the synchronized data to WhatsApp Cloud API for customer notifications or to CRM systems like Salesforce and Zoho for unified customer insights."
+                    }
+                  ].map((item, i) => (
+                    <div key={i} className="flex items-start gap-4 rounded-xl border border-border/60 bg-white p-5">
+                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand-primary text-white text-sm font-bold shadow-md shadow-brand-primary/20">
+                        {item.step}
+                      </div>
+                      <div>
+                        <h4 className="font-semibold text-text-primary mb-1">{item.title}</h4>
+                        <p className="text-sm text-text-secondary">{item.description}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="rounded-xl bg-brand-primary/5 border border-brand-primary/20 p-5">
+                  <div className="flex items-start gap-3">
+                    <Link2 className="h-5 w-5 text-brand-primary shrink-0 mt-0.5" />
+                    <div>
+                      <p className="text-sm font-semibold text-text-primary mb-1">Related: <Link href="/solutions/busy-whatsapp-integration" className="text-brand-primary hover:underline">Busy ERP WhatsApp Integration</Link></p>
+                      <p className="text-sm text-text-secondary">Learn how to connect your ERP data directly to WhatsApp for automated customer communication.</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </FadeIn>
+
             {/* Practical Implementation */}
             <FadeIn>
               <div className="space-y-6">
@@ -741,6 +926,83 @@ export default function BusyERPGoogleSheetsIntegrationGuide() {
               </div>
             </FadeIn>
 
+            {/* FAQ Section */}
+            <FadeIn>
+              <div className="space-y-6">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-primary/10 text-brand-primary">
+                    <HelpCircle className="h-5 w-5" />
+                  </div>
+                  <h2 className="text-2xl sm:text-3xl font-bold text-text-primary">
+                    Frequently Asked Questions
+                  </h2>
+                </div>
+                <p className="text-text-secondary leading-relaxed">
+                  Find answers to common questions about <strong className="text-text-primary">Busy ERP Google Sheets integration</strong>, data export, and automation workflows.
+                </p>
+
+                <div className="space-y-4">
+                  {/* FAQ 1 */}
+                  <div className="rounded-xl border border-border/60 bg-white p-6">
+                    <h3 className="text-lg font-semibold text-text-primary mb-3">How to export data from Busy ERP to Google Sheets?</h3>
+                    <p className="text-text-secondary leading-relaxed">
+                      You can export data from Busy ERP to Google Sheets using multiple methods: (1) Use Google Apps Script to connect directly to Busy&apos;s database via API, (2) Deploy middleware solutions like the <Link href="/solutions/busy-google-sheet" className="text-brand-primary hover:underline font-medium">Whats91 Busy Google Sheets integration</Link> platform for automated syncing, or (3) Use scheduled CSV exports from Busy combined with Google Sheets IMPORTRANGE function. The most reliable approach is using a dedicated integration platform that handles real-time synchronization automatically.
+                    </p>
+                  </div>
+
+                  {/* FAQ 2 */}
+                  <div className="rounded-xl border border-border/60 bg-white p-6">
+                    <h3 className="text-lg font-semibold text-text-primary mb-3">Does Busy ERP support API integration?</h3>
+                    <p className="text-text-secondary leading-relaxed">
+                      Yes, Busy ERP supports API integration for data extraction and synchronization. The Busy API allows developers to access financial data, inventory records, sales transactions, and customer information programmatically. This enables real-time <strong className="text-text-primary">Busy ERP automation</strong> and integration with external systems like Google Sheets, CRMs, and WhatsApp platforms. Check with your Busy provider for API documentation and access credentials.
+                    </p>
+                  </div>
+
+                  {/* FAQ 3 */}
+                  <div className="rounded-xl border border-border/60 bg-white p-6">
+                    <h3 className="text-lg font-semibold text-text-primary mb-3">Can I automate WhatsApp messages using Busy ERP data?</h3>
+                    <p className="text-text-secondary leading-relaxed">
+                      Absolutely! By integrating <strong className="text-text-primary">Busy Accounting Google Sheets</strong> with WhatsApp Cloud API, you can automate customer communications. Common use cases include sending order confirmations, invoice PDFs, payment reminders, and balance inquiries. When data syncs from Busy to Google Sheets, webhook triggers can send automated WhatsApp messages to customers. Learn more about <Link href="/solutions/busy-whatsapp-integration" className="text-brand-primary hover:underline font-medium">Busy ERP WhatsApp integration</Link> for complete workflow automation.
+                    </p>
+                  </div>
+
+                  {/* FAQ 4 */}
+                  <div className="rounded-xl border border-border/60 bg-white p-6">
+                    <h3 className="text-lg font-semibold text-text-primary mb-3">Is Google Sheets suitable for ERP reporting?</h3>
+                    <p className="text-text-secondary leading-relaxed">
+                      Google Sheets is highly suitable for ERP reporting, especially for SMEs using Busy Accounting Software. It offers real-time collaboration, customizable dashboards, formula-based analytics, and easy sharing with stakeholders. While Google Sheets has row limits (10 million cells), it&apos;s ideal for most SME reporting needs. For larger enterprises, data can be aggregated and summarized in Sheets before syncing to BigQuery or other data warehouses for advanced analytics.
+                    </p>
+                  </div>
+
+                  {/* FAQ 5 */}
+                  <div className="rounded-xl border border-border/60 bg-white p-6">
+                    <h3 className="text-lg font-semibold text-text-primary mb-3">What data can be synced from Busy ERP to Google Sheets?</h3>
+                    <p className="text-text-secondary leading-relaxed">
+                      Key data modules that can be synced include: Financial Accounting (ledgers, trial balance, P&amp;L, Balance Sheet), Inventory Management (stock status, batch details, godown data), Sales &amp; Purchase (quotations, orders, challans, invoices), Outstanding Analysis (bill-by-bill tracking, ageing reports), GST Compliance (GSTR-1, GSTR-3B data), and Payroll/Operations data. This enables comprehensive <strong className="text-text-primary">Busy ERP data export</strong> for business intelligence.
+                    </p>
+                  </div>
+
+                  {/* FAQ 6 */}
+                  <div className="rounded-xl border border-border/60 bg-white p-6">
+                    <h3 className="text-lg font-semibold text-text-primary mb-3">How often can Busy ERP data sync to Google Sheets?</h3>
+                    <p className="text-text-secondary leading-relaxed">
+                      Sync frequency depends on your integration method. Real-time sync is possible with webhook-based integrations. For Google Apps Script triggers, you can set updates every 10-15 minutes. Most businesses find 15-minute intervals optimal for balancing data freshness with API rate limits. <Link href="/solutions/busy-api" className="text-brand-primary hover:underline font-medium">Busy API integration</Link> solutions can provide near real-time updates for critical business operations.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="rounded-xl bg-brand-primary/5 border border-brand-primary/20 p-5">
+                  <div className="flex items-start gap-3">
+                    <MessageCircle className="h-5 w-5 text-brand-primary shrink-0 mt-0.5" />
+                    <div>
+                      <p className="text-sm font-semibold text-text-primary mb-1">Need help with integration?</p>
+                      <p className="text-sm text-text-secondary">Contact our team for personalized guidance on setting up <Link href="/solutions/busy-google-sheet" className="text-brand-primary hover:underline font-medium">Busy ERP Google Sheets integration</Link> for your business.</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </FadeIn>
+
             {/* Key Takeaways */}
             <FadeIn>
               <div className="rounded-2xl bg-gradient-to-br from-brand-primary to-brand-primary/80 p-6 sm:p-8 text-white">
@@ -779,7 +1041,7 @@ export default function BusyERPGoogleSheetsIntegrationGuide() {
                   <h3 className="font-semibold text-text-primary text-lg mb-1">Found this helpful?</h3>
                   <p className="text-sm text-text-muted">Share it with your network</p>
                 </div>
-                <ShareSection title="Busy ERP to Google Sheets Integration: Complete Guide for Enterprise Data Liberation" />
+                <ShareSection title="Busy ERP Google Sheets Integration (Step-by-Step Guide + Automation)" />
               </div>
             </FadeIn>
 
