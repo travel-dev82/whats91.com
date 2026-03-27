@@ -49,8 +49,8 @@ export const blogPosts: BlogPostMeta[] = [
   {
     id: "8",
     slug: "busy-erp-google-sheets-integration-complete-guide",
-    title: "Busy ERP to Google Sheets Integration: Complete Guide for Enterprise Data Liberation",
-    excerpt: "Discover how syncing Busy Accounting Software data to Google Sheets transforms static record-keeping into a dynamic automation engine. Learn advanced reporting, CRM integration, and WhatsApp workflow automation.",
+    title: "Busy ERP Google Sheets Integration (Step-by-Step Guide + Automation)",
+    excerpt: "Learn how to connect Busy ERP with Google Sheets for real-time reporting, automation, CRM integration, and WhatsApp workflows. Complete step-by-step guide for 2026.",
     category: "ERP Integration",
     tags: ["Busy ERP", "Google Sheets", "Integration", "Automation", "WhatsApp"],
     authorId: "1",
@@ -58,9 +58,9 @@ export const blogPosts: BlogPostMeta[] = [
     readingTime: 22,
     isFeatured: true,
     seo: {
-      title: "Busy ERP to Google Sheets Integration Guide | Automation, Dashboards, CRM Sync",
-      description: "Complete guide to integrating Busy Accounting Software with Google Sheets. Learn advanced business intelligence dashboards, CRM migration (Salesforce, Zoho), WhatsApp automation, and security best practices.",
-      keywords: ["Busy ERP to Google Sheet integration", "Google Sheet add-on for Busy Accounting Software", "Busy software Excel export", "Automate WhatsApp from Busy ERP", "Live inventory tracking in spreadsheets", "Busy ERP CRM integration", "Google Sheets ERP dashboard"],
+      title: "Busy ERP Google Sheets Integration (Step-by-Step Guide + Automation)",
+      description: "Learn how to connect Busy ERP with Google Sheets for real-time reporting, automation, CRM integration, and WhatsApp workflows. Complete step-by-step guide for 2026.",
+      keywords: ["Busy ERP Google Sheets integration", "Busy Accounting Google Sheets", "Busy ERP data export", "Busy ERP automation", "Busy WhatsApp integration", "Google Sheets ERP dashboard"],
     },
   },
   {
